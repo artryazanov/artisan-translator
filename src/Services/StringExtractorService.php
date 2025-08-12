@@ -1,0 +1,52 @@
+<?php
+
+namespace Artryazanov\ArtisanTranslator\Services;
+
+class StringExtractorService
+{
+    /**
+     * Extract strings wrapped in __() or @lang() from a Blade file.
+     * Ignores already externalized keys like 'file.key' (alphanumeric, dashes/underscores with dots),
+     * but keeps normal sentences even if they contain punctuation dots.
+     */
+    public function extract(string $filePath): array
+    {
+        $content = @file_get_contents($filePath);
+        if ($content === false) {
+            return [];
+        }
+
+        // Two patterns: one for single quoted, one for double quoted
+        $patternSingle = "/(?:__|@lang)\(\s*'((?:\\\\.|[^'\\\\])*)'/u";
+        $patternDouble = '/(?:__|@lang)\(\s*"((?:\\\\.|[^"\\\\])*)"/u';
+
+        $matches = [];
+        if (preg_match_all($patternSingle, $content, $m1)) {
+            $matches = array_merge($matches, $m1[1]);
+        }
+        if (preg_match_all($patternDouble, $content, $m2)) {
+            $matches = array_merge($matches, $m2[1]);
+        }
+        if (empty($matches)) {
+            return [];
+        }
+
+        $strings = [];
+        foreach ($matches as $text) {
+            $text = stripcslashes($text);
+            $trimmed = trim($text);
+            if ($trimmed === '' || $this->isLikelyTranslationKey($trimmed)) {
+                continue;
+            }
+            $strings[] = $trimmed;
+        }
+
+        return array_values(array_unique($strings));
+    }
+
+    private function isLikelyTranslationKey(string $value): bool
+    {
+        // Key like: words.with.dots_only (no spaces), segments are [a-z0-9_-]
+        return (bool) preg_match('/^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/', $value);
+    }
+}

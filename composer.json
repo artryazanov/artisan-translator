@@ -1,0 +1,60 @@
+{
+  "name": "artryazanov/artisan-translator",
+  "description": "A Laravel package to extract Blade translation strings and translate them using AI.",
+  "keywords": [
+    "laravel",
+    "translation",
+    "localization",
+    "artisan",
+    "gemini",
+    "ai"
+  ],
+  "type": "laravel-package",
+  "license": "Unlicense",
+  "require": {
+    "php": "^8.2",
+    "illuminate/contracts": "^11.0|^12.0",
+    "illuminate/support": "^11.0|^12.0",
+    "illuminate/console": "^11.0|^12.0",
+    "illuminate/filesystem": "^11.0|^12.0",
+    "symfony/finder": "^7.0",
+    "google-gemini-php/laravel": "^2.0"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^9.0|^10.0",
+    "pestphp/pest": "^3.0",
+    "pestphp/pest-plugin-laravel": "^3.0",
+    "mcamara/laravel-localization": "^2.0",
+    "mockery/mockery": "^1.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "Artryazanov\\ArtisanTranslator\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Artryazanov\\ArtisanTranslator\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "vendor/bin/pest",
+    "test-coverage": "vendor/bin/pest --coverage"
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true,
+      "php-http/discovery": true
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Artryazanov\\ArtisanTranslator\\ArtisanTranslatorServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
