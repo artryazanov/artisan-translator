@@ -13,8 +13,8 @@ class CleanupTranslationsCommand extends Command
      * @var string
      */
     protected $signature = 'translations:cleanup'
-        . ' {--dry-run : Show unused keys without deleting them}'
-        . ' {--force : Skip confirmation prompt}';
+        .' {--dry-run : Show unused keys without deleting them}'
+        .' {--force : Skip confirmation prompt}';
 
     /**
      * The console command description.
@@ -38,22 +38,25 @@ class CleanupTranslationsCommand extends Command
 
         if (empty($unusedKeys)) {
             $this->info('No unused translation keys found.');
+
             return self::SUCCESS;
         }
 
-        $this->warn('Found ' . count($unusedKeys) . ' unused translation keys:');
+        $this->warn('Found '.count($unusedKeys).' unused translation keys:');
         foreach ($unusedKeys as $k) {
-            $this->line(' - ' . $k);
+            $this->line(' - '.$k);
         }
 
         if ($this->option('dry-run')) {
             $this->info('Dry-run mode is enabled. No files were changed.');
+
             return self::SUCCESS;
         }
 
         if (! $this->option('force')) {
             if (! $this->confirm('Do you want to delete these keys? This action cannot be undone.')) {
                 $this->info('Operation cancelled.');
+
                 return self::FAILURE;
             }
         }
@@ -61,11 +64,11 @@ class CleanupTranslationsCommand extends Command
         $report = $cleaner->removeUnusedKeys($unusedKeys, $langPaths);
 
         $this->info('Cleanup completed.');
-        $this->info('Removed keys: ' . count($report['removed']));
+        $this->info('Removed keys: '.count($report['removed']));
         if (! empty($report['deleted_files'])) {
             $this->warn('The following files were deleted because they became empty:');
             foreach ($report['deleted_files'] as $file) {
-                $this->line(' - ' . $file);
+                $this->line(' - '.$file);
             }
         }
 

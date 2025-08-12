@@ -15,15 +15,13 @@ use Symfony\Component\Finder\Finder;
  */
 class TranslationCleanerService
 {
-    public function __construct(private readonly Filesystem $files)
-    {
-    }
+    public function __construct(private readonly Filesystem $files) {}
 
     /**
      * Find all unused translation keys given scan paths and language paths.
      *
-     * @param array<string> $scanPaths Directories to scan for usage.
-     * @param array<string> $langPaths Directories that contain language files (e.g. [lang_path()]).
+     * @param  array<string>  $scanPaths  Directories to scan for usage.
+     * @param  array<string>  $langPaths  Directories that contain language files (e.g. [lang_path()]).
      * @return array<string> List of unused keys.
      */
     public function findUnusedKeys(array $scanPaths, array $langPaths): array
@@ -41,8 +39,8 @@ class TranslationCleanerService
     /**
      * Remove unused keys from language files and delete empty files.
      *
-     * @param array<string> $unusedKeys Keys to remove.
-     * @param array<string> $langRoots  Language roots, typically [lang_path()].
+     * @param  array<string>  $unusedKeys  Keys to remove.
+     * @param  array<string>  $langRoots  Language roots, typically [lang_path()].
      * @return array{removed: array<string>, deleted_files: array<string>} Report of removed keys and deleted files.
      */
     public function removeUnusedKeys(array $unusedKeys, array $langRoots): array
@@ -57,7 +55,7 @@ class TranslationCleanerService
         }
 
         // Split keys into JSON (no dot) and PHP (have dot -> group.item)
-        $jsonKeys = array_values(array_filter($unusedKeys, fn ($k) => !str_contains($k, '.')));
+        $jsonKeys = array_values(array_filter($unusedKeys, fn ($k) => ! str_contains($k, '.')));
         $phpKeys = array_values(array_filter($unusedKeys, fn ($k) => str_contains($k, '.')));
 
         // Clean JSON files like resources/lang/en.json
@@ -67,7 +65,7 @@ class TranslationCleanerService
             }
 
             // Any locale JSON file directly under $langRoot
-            $finder = new Finder();
+            $finder = new Finder;
             $finder->in($langRoot)->depth('== 0')->files()->name('*.json');
             foreach ($finder as $jsonFile) {
                 $path = $jsonFile->getRealPath();
@@ -88,7 +86,7 @@ class TranslationCleanerService
                         $this->files->delete($path);
                         $report['deleted_files'][] = $path;
                     } else {
-                        $this->files->put($path, json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n");
+                        $this->files->put($path, json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)."\n");
                     }
                 }
             }
@@ -107,7 +105,7 @@ class TranslationCleanerService
                 continue;
             }
 
-            $finder = new Finder();
+            $finder = new Finder;
             $finder->in($langRoot)->files()->name('*.php');
 
             foreach ($finder as $phpFile) {
@@ -117,7 +115,7 @@ class TranslationCleanerService
                 }
 
                 // Compute group for this file: {langRoot}/{locale}/{group}.php -> group is relative path after locale
-                $relative = Str::after($real, rtrim($langRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
+                $relative = Str::after($real, rtrim($langRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
                 $relative = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $relative);
 
                 // remove leading {locale}\ or {locale}/
@@ -145,7 +143,7 @@ class TranslationCleanerService
                 foreach ($keysByGroup[$group] as $itemPath) {
                     if (Arr::has($data, $itemPath)) {
                         Arr::forget($data, $itemPath);
-                        $report['removed'][] = $group . '.' . $itemPath;
+                        $report['removed'][] = $group.'.'.$itemPath;
                     }
                 }
 
@@ -154,7 +152,7 @@ class TranslationCleanerService
                         $this->files->delete($real);
                         $report['deleted_files'][] = $real;
                     } else {
-                        $this->files->put($real, "<?php\n\nreturn " . var_export($data, true) . ";\n");
+                        $this->files->put($real, "<?php\n\nreturn ".var_export($data, true).";\n");
                     }
                 }
             }
@@ -173,14 +171,14 @@ class TranslationCleanerService
      * Collect all translation keys defined across given lang paths.
      * Handles both PHP array files and JSON files.
      *
-     * @param array<string> $langPaths
+     * @param  array<string>  $langPaths
      * @return array<string>
      */
     protected function getDefinedTranslationKeys(array $langPaths): array
     {
         $keys = [];
 
-        $finder = new Finder();
+        $finder = new Finder;
         $finder->in($langPaths)->files()->name(['*.php', '*.json']);
 
         foreach ($finder as $file) {
@@ -188,6 +186,7 @@ class TranslationCleanerService
             if ($ext === 'json') {
                 $content = json_decode($file->getContents(), true) ?: [];
                 $keys = array_merge($keys, array_keys($content));
+
                 continue;
             }
 
@@ -203,7 +202,7 @@ class TranslationCleanerService
 
             // Determine group path after locale
             foreach ($langPaths as $langRoot) {
-                $langRoot = rtrim($langRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+                $langRoot = rtrim($langRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
                 if (! str_starts_with($real, $langRoot)) {
                     continue;
                 }
@@ -219,7 +218,7 @@ class TranslationCleanerService
 
                 $flat = Arr::dot($data);
                 foreach ($flat as $k => $_) {
-                    $keys[] = $group . '.' . $k;
+                    $keys[] = $group.'.'.$k;
                 }
                 break; // processed with matching lang root
             }
@@ -234,7 +233,7 @@ class TranslationCleanerService
     /**
      * Scan project code for used translation keys.
      *
-     * @param array<string> $scanPaths
+     * @param  array<string>  $scanPaths
      * @return array<string>
      */
     protected function findUsedTranslationKeys(array $scanPaths): array
@@ -243,19 +242,19 @@ class TranslationCleanerService
 
         $functions = config('translation-cleaner.translation_functions', ['__', 'trans', 'trans_choice', '@lang', '@choice']);
         // Build patterns for helpers and blade directives
-        $helperFns = array_filter($functions, fn ($f) => !str_starts_with($f, '@'));
+        $helperFns = array_filter($functions, fn ($f) => ! str_starts_with($f, '@'));
         $directives = array_filter($functions, fn ($f) => str_starts_with($f, '@'));
 
         $patterns = [];
         if (! empty($helperFns)) {
             $fnAlternation = implode('|', array_map(fn ($f) => preg_quote($f, '/'), $helperFns));
             // Match __("key") or trans('key') or trans_choice('key', ...)
-            $patterns[] = '/(?:' . $fnAlternation . ')\(\s*[\'"\"]([^\'"\"]+)[\'"\"]/u';
+            $patterns[] = '/(?:'.$fnAlternation.')\(\s*[\'"\"]([^\'"\"]+)[\'"\"]/u';
         }
         foreach ($directives as $d) {
             $name = ltrim($d, '@');
             // @lang('key') or @choice('key', ...)
-            $patterns[] = '/@' . preg_quote($name, '/') . '\(\s*[\'"\"]([^\'"\"]+)[\'"\"]/u';
+            $patterns[] = '/@'.preg_quote($name, '/').'\(\s*[\'"\"]([^\'"\"]+)[\'"\"]/u';
         }
 
         $filePatterns = config('translation-cleaner.file_extensions', ['*.php', '*.blade.php']);
@@ -268,13 +267,14 @@ class TranslationCleanerService
             if (str_starts_with($p, '*')) {
                 return $p;
             }
-            if (!str_contains($p, '.')) {
-                return '*.' . $p;
+            if (! str_contains($p, '.')) {
+                return '*.'.$p;
             }
-            return '*.' . ltrim($p, '*.');
+
+            return '*.'.ltrim($p, '*.');
         }, $filePatterns);
 
-        $finder = new Finder();
+        $finder = new Finder;
         $finder->in($scanPaths)->files()->name($filePatterns);
 
         foreach ($finder as $file) {
