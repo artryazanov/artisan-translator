@@ -21,7 +21,7 @@ jobs:
       run: composer validate --strict
 
     - name: Cache Composer packages
-      id: composer-cache
+      id: composer-cache-artisan-translator
       uses: actions/cache@v3
       with:
         path: vendor
