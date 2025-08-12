@@ -44,6 +44,23 @@ Arguments/options:
 
 If `--targets` is not provided and `mcamara_localization_support=true`, and `mcamara/laravel-localization` is installed, targets are taken from `LaravelLocalization::getSupportedLocales()`.
 
+### translations:cleanup
+Finds translation keys that are defined in language files but not used in your app code, removes them, and deletes empty language files.
+
+Options:
+- `--dry-run` show unused keys without deleting anything;
+- `--force` skip the confirmation prompt.
+
+Configuration:
+- Publish the config if needed:
+  ```bash
+  php artisan vendor:publish --provider="Artryazanov\ArtisanTranslator\ArtisanTranslatorServiceProvider" --tag="config"
+  ```
+- Configure scan paths, file extensions, and translation functions in `config/translation-cleaner.php`.
+
+Safety note:
+- This command is destructive. Always run with `--dry-run` first and ensure your project is under version control.
+
 ## Testing
 
 This package ships with unit and feature tests (Pest + Orchestra Testbench):
