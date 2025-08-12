@@ -2,11 +2,11 @@
 
 namespace Artryazanov\ArtisanTranslator\Tests\Unit;
 
+use Artryazanov\ArtisanTranslator\Services\TranslationFileService;
+use Artryazanov\ArtisanTranslator\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 use SplFileInfo;
-use Artryazanov\ArtisanTranslator\Services\TranslationFileService;
-use Artryazanov\ArtisanTranslator\Tests\TestCase;
 
 class TranslationFileServiceTest extends TestCase
 {
@@ -17,7 +17,7 @@ class TranslationFileServiceTest extends TestCase
         File::makeDirectory(dirname($bladePath), 0755, true, true);
         File::put($bladePath, '<h1>Test</h1>');
 
-        $filesystem = new Filesystem();
+        $filesystem = new Filesystem;
         $service = new TranslationFileService($filesystem);
 
         $bladeFile = new SplFileInfo($bladePath);

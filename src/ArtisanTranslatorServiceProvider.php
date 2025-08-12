@@ -2,17 +2,17 @@
 
 namespace Artryazanov\ArtisanTranslator;
 
-use Illuminate\Support\ServiceProvider;
 use Artryazanov\ArtisanTranslator\Commands\ExtractStringsCommand;
 use Artryazanov\ArtisanTranslator\Commands\TranslateStringsCommand;
 use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
 use Artryazanov\ArtisanTranslator\Services\GeminiTranslationService;
+use Illuminate\Support\ServiceProvider;
 
 class ArtisanTranslatorServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/artisan-translator.php', 'artisan-translator');
+        $this->mergeConfigFrom(__DIR__.'/../config/artisan-translator.php', 'artisan-translator');
 
         $this->app->singleton(TranslationService::class, function ($app) {
             return new GeminiTranslationService(
@@ -31,7 +31,7 @@ class ArtisanTranslatorServiceProvider extends ServiceProvider
             ]);
 
             $this->publishes([
-                __DIR__ . '/../config/artisan-translator.php' => config_path('artisan-translator.php'),
+                __DIR__.'/../config/artisan-translator.php' => config_path('artisan-translator.php'),
             ], 'config');
         }
     }

@@ -2,11 +2,11 @@
 
 namespace Artryazanov\ArtisanTranslator\Commands;
 
-use Illuminate\Console\Command;
 use Artryazanov\ArtisanTranslator\Services\BladeScannerService;
 use Artryazanov\ArtisanTranslator\Services\BladeWriterService;
 use Artryazanov\ArtisanTranslator\Services\StringExtractorService;
 use Artryazanov\ArtisanTranslator\Services\TranslationFileService;
+use Illuminate\Console\Command;
 
 class ExtractStringsCommand extends Command
 {
@@ -16,9 +16,9 @@ class ExtractStringsCommand extends Command
      * @var string
      */
     protected $signature = 'translate:extract '
-        . '{--path= : Limit scanning to the specified subdirectory within resources/views} '
-        . '{--dry-run : Perform without writing changes to files} '
-        . '{--force : Overwrite existing keys in translation files}';
+        .'{--path= : Limit scanning to the specified subdirectory within resources/views} '
+        .'{--dry-run : Perform without writing changes to files} '
+        .'{--force : Overwrite existing keys in translation files}';
 
     /**
      * The console command description.
@@ -46,6 +46,7 @@ class ExtractStringsCommand extends Command
         $bladeFiles = $scanner->find($path);
         if ($bladeFiles->isEmpty()) {
             $this->warn('No Blade files found. Nothing to process.');
+
             return self::SUCCESS;
         }
 
@@ -57,12 +58,13 @@ class ExtractStringsCommand extends Command
 
             if (empty($strings)) {
                 $this->getOutput()->progressAdvance();
+
                 continue;
             }
 
             $replacements = [];
             foreach ($strings as $string) {
-                if (!$isDryRun) {
+                if (! $isDryRun) {
                     $key = $fileService->saveString($file, $string, $force);
                     if ($key) {
                         $replacements[$string] = $key;
@@ -71,7 +73,7 @@ class ExtractStringsCommand extends Command
                 $totalStringsExtracted++;
             }
 
-            if (!empty($replacements) && !$isDryRun) {
+            if (! empty($replacements) && ! $isDryRun) {
                 $writer->updateBladeFile($file->getRealPath(), $replacements);
             }
 
