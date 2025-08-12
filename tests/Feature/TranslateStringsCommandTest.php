@@ -2,10 +2,10 @@
 
 namespace Artryazanov\ArtisanTranslator\Tests\Feature;
 
-use Illuminate\Support\Facades\File;
-use Mockery;
 use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
 use Artryazanov\ArtisanTranslator\Tests\TestCase;
+use Illuminate\Support\Facades\File;
+use Mockery;
 
 class TranslateStringsCommandTest extends TestCase
 {
@@ -20,11 +20,15 @@ class TranslateStringsCommandTest extends TestCase
         // Mock TranslationService
         $this->mock(TranslationService::class, function ($mock) {
             $mock->shouldReceive('translate')
-                 ->with('Hello', 'en', 'de', Mockery::on(function ($ctx) { return is_array($ctx) && isset($ctx['key']); }))
-                 ->andReturn('Hallo');
+                ->with('Hello', 'en', 'de', Mockery::on(function ($ctx) {
+                    return is_array($ctx) && isset($ctx['key']);
+                }))
+                ->andReturn('Hallo');
             $mock->shouldReceive('translate')
-                 ->with('World', 'en', 'de', Mockery::on(function ($ctx) { return is_array($ctx) && isset($ctx['key']); }))
-                 ->andReturn('Welt');
+                ->with('World', 'en', 'de', Mockery::on(function ($ctx) {
+                    return is_array($ctx) && isset($ctx['key']);
+                }))
+                ->andReturn('Welt');
         });
 
         // Run command

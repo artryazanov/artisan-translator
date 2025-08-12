@@ -2,17 +2,17 @@
 
 namespace Artryazanov\ArtisanTranslator\Commands;
 
+use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
-use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
 
 class TranslateStringsCommand extends Command
 {
     protected $signature = 'translate:ai'
-        . ' {source? : Source language (defaults to config)}'
-        . " {--targets=* : Target languages (e.g., --targets=de --targets=fr)}"
-        . ' {--force : Overwrite existing translations}';
+        .' {source? : Source language (defaults to config)}'
+        .' {--targets=* : Target languages (e.g., --targets=de --targets=fr)}'
+        .' {--force : Overwrite existing translations}';
 
     protected $description = 'Translates strings to other languages using the Gemini API.';
 
@@ -27,17 +27,19 @@ class TranslateStringsCommand extends Command
         if (empty($targetLangs)) {
             $this->error('Target languages are not provided and cannot be determined automatically.');
             $this->line('Please provide --targets or install mcamara/laravel-localization to auto-detect supported locales.');
+
             return self::FAILURE;
         }
 
         $this->info("Source language: {$sourceLang}");
-        $this->info('Target languages: ' . implode(', ', $targetLangs));
+        $this->info('Target languages: '.implode(', ', $targetLangs));
 
         $langRootPath = (string) config('artisan-translator.lang_root_path', 'blade');
         $sourcePath = lang_path("{$sourceLang}/{$langRootPath}");
 
-        if (!$filesystem->isDirectory($sourcePath)) {
+        if (! $filesystem->isDirectory($sourcePath)) {
             $this->error("Source translations directory not found: {$sourcePath}");
+
             return self::FAILURE;
         }
 
@@ -46,15 +48,15 @@ class TranslateStringsCommand extends Command
 
         foreach ($sourceFiles as $sourceFile) {
             $sourceData = $filesystem->getRequire($sourceFile->getRealPath());
-            if (!is_array($sourceData)) {
+            if (! is_array($sourceData)) {
                 $sourceData = [];
             }
             $translations = Arr::dot($sourceData);
 
             foreach ($targetLangs as $targetLang) {
-                $this->line("➤ Translating to '{$targetLang}' for file: " . $sourceFile->getRelativePathname());
+                $this->line("➤ Translating to '{$targetLang}' for file: ".$sourceFile->getRelativePathname());
 
-                $targetFilePath = lang_path("{$targetLang}/{$langRootPath}/" . $sourceFile->getRelativePathname());
+                $targetFilePath = lang_path("{$targetLang}/{$langRootPath}/".$sourceFile->getRelativePathname());
                 $existingTranslations = [];
                 if ($filesystem->exists($targetFilePath)) {
                     $existingData = $filesystem->getRequire($targetFilePath);
@@ -66,12 +68,12 @@ class TranslateStringsCommand extends Command
                     if ($text === '' || $text === null) {
                         continue;
                     }
-                    if (!$force && isset($existingTranslations[$key])) {
+                    if (! $force && isset($existingTranslations[$key])) {
                         continue; // already translated
                     }
 
                     $this->comment("  - Translating key '{$key}'...");
-                    $fullKey = $langRootPath . '.' . $key;
+                    $fullKey = $langRootPath.'.'.$key;
                     $context = [
                         'key' => $fullKey,
                         'file' => $sourceFile->getRelativePathname(),
@@ -86,26 +88,28 @@ class TranslateStringsCommand extends Command
                     }
                 }
 
-                if (!empty($newTranslations)) {
+                if (! empty($newTranslations)) {
                     $this->saveTranslations($targetFilePath, $newTranslations, $existingTranslations);
                 }
             }
         }
 
         $this->info("✅ Done. Total strings translated: {$totalStringsTranslated}.");
+
         return self::SUCCESS;
     }
 
     private function getTargetLanguages(): array
     {
         $targets = $this->option('targets');
-        if (!empty($targets)) {
+        if (! empty($targets)) {
             return array_values(array_filter($targets));
         }
 
         if (config('artisan-translator.mcamara_localization_support')
             && class_exists(\Mcamara\LaravelLocalization\Facades\LaravelLocalization::class)) {
             $supportedLocales = \Mcamara\LaravelLocalization\Facades\LaravelLocalization::getSupportedLocales();
+
             return array_keys($supportedLocales);
         }
 
@@ -122,11 +126,11 @@ class TranslateStringsCommand extends Command
 
         $directory = dirname($path);
         $fs = app(Filesystem::class);
-        if (!$fs->isDirectory($directory)) {
+        if (! $fs->isDirectory($directory)) {
             $fs->makeDirectory($directory, 0755, true, true);
         }
 
-        $content = "<?php\n\nreturn " . var_export($undotted, true) . ";\n";
+        $content = "<?php\n\nreturn ".var_export($undotted, true).";\n";
         $fs->put($path, $content);
     }
 }

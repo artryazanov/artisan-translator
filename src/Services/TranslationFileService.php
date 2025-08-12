@@ -9,7 +9,9 @@ use SplFileInfo;
 class TranslationFileService
 {
     private Filesystem $filesystem;
+
     private string $langRootPath;
+
     private string $sourceLanguage;
 
     public function __construct(Filesystem $filesystem)
@@ -38,18 +40,18 @@ class TranslationFileService
             if ($part === $this->langRootPath) {
                 continue;
             }
-            if (!isset($currentLevel[$part]) || !is_array($currentLevel[$part])) {
+            if (! isset($currentLevel[$part]) || ! is_array($currentLevel[$part])) {
                 $currentLevel[$part] = [];
             }
             $currentLevel = &$currentLevel[$part];
         }
 
-        if (!isset($currentLevel[$leafKey]) || $force) {
+        if (! isset($currentLevel[$leafKey]) || $force) {
             $currentLevel[$leafKey] = $string;
             $this->saveTranslations($langFilePath, $translations);
         }
 
-        return $this->langRootPath . '.' . implode('.', $keyParts) . '.' . $leafKey;
+        return $this->langRootPath.'.'.implode('.', $keyParts).'.'.$leafKey;
     }
 
     /**
@@ -58,7 +60,7 @@ class TranslationFileService
     private function generateKey(SplFileInfo $bladeFile, string $string): string
     {
         // Normalize paths to forward slashes to be OS-agnostic
-        $viewsBase = str_replace('\\', '/', rtrim(resource_path('views'), "\\/")) . '/';
+        $viewsBase = str_replace('\\', '/', rtrim(resource_path('views'), '\\/')).'/';
         $absPath = str_replace('\\', '/', $bladeFile->getPathname());
         $relativePath = Str::after($absPath, $viewsBase);
 
@@ -72,6 +74,7 @@ class TranslationFileService
         $stringKey = (string) Str::of($snake)->limit(50, '');
 
         $keyParts = array_merge($pathParts, [$stringKey]);
+
         return implode('.', $keyParts);
     }
 
@@ -81,11 +84,12 @@ class TranslationFileService
     private function getLangFilePath(SplFileInfo $bladeFile): string
     {
         // Normalize paths to forward slashes to be OS-agnostic
-        $viewsBase = str_replace('\\', '/', rtrim(resource_path('views'), "\\/")) . '/';
+        $viewsBase = str_replace('\\', '/', rtrim(resource_path('views'), '\\/')).'/';
         $absPath = str_replace('\\', '/', $bladeFile->getPathname());
         $relativePath = Str::after($absPath, $viewsBase);
 
         $pathWithoutExtension = str_replace('.blade.php', '', $relativePath);
+
         return lang_path("{$this->sourceLanguage}/{$this->langRootPath}/{$pathWithoutExtension}.php");
     }
 
@@ -96,8 +100,10 @@ class TranslationFileService
     {
         if ($this->filesystem->exists($path)) {
             $data = $this->filesystem->getRequire($path);
+
             return is_array($data) ? $data : [];
         }
+
         return [];
     }
 
@@ -107,11 +113,11 @@ class TranslationFileService
     private function saveTranslations(string $path, array $translations): void
     {
         $directory = dirname($path);
-        if (!$this->filesystem->isDirectory($directory)) {
+        if (! $this->filesystem->isDirectory($directory)) {
             $this->filesystem->makeDirectory($directory, 0755, true);
         }
 
-        $content = "<?php\n\nreturn " . var_export($translations, true) . ";\n";
+        $content = "<?php\n\nreturn ".var_export($translations, true).";\n";
         $this->filesystem->put($path, $content);
     }
 }

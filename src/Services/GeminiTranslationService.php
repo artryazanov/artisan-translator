@@ -23,9 +23,10 @@ class GeminiTranslationService implements TranslationService
         try {
             $result = GeminiFacade::generativeModel(model: $this->model)->generateContent($prompt);
             $out = $result->text();
+
             return trim((string) $out);
         } catch (\Throwable $e) {
-            throw new TranslationServiceException("Gemini API error: " . $e->getMessage(), 0, $e);
+            throw new TranslationServiceException('Gemini API error: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -34,17 +35,17 @@ class GeminiTranslationService implements TranslationService
         $lines = [];
         $lines[] = "Translate the following text from '{$sourceLang}' to '{$targetLang}'.";
         $lines[] = 'The text is part of a Laravel web application UI.';
-        if (!empty($context['key'])) {
+        if (! empty($context['key'])) {
             $lines[] = "Translation key: {$context['key']}";
         }
-        if (!empty($context['file'])) {
+        if (! empty($context['file'])) {
             $lines[] = "Source file: {$context['file']}";
         }
         $lines[] = 'Preserve any HTML tags and placeholders like :variable.';
         $lines[] = 'Return only the translated text with no extra commentary.';
         $lines[] = '';
         $lines[] = 'Text:';
-        $lines[] = '"' . $text . '"';
+        $lines[] = '"'.$text.'"';
 
         return implode("\n", $lines);
     }

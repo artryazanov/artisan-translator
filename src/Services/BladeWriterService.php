@@ -16,8 +16,7 @@ class BladeWriterService
     /**
      * Update a Blade file replacing literal strings with translation keys.
      *
-     * @param string $filePath
-     * @param array<string,string> $replacements map ['Original Text' => 'blade.path.key']
+     * @param  array<string,string>  $replacements  map ['Original Text' => 'blade.path.key']
      */
     public function updateBladeFile(string $filePath, array $replacements): void
     {
@@ -34,7 +33,7 @@ class BladeWriterService
                 "/@lang\(\s*\"{$rxDouble}\"\s*\)/u",
             ];
 
-            $replacementString = "__('" . $key . "')";
+            $replacementString = "__('".$key."')";
             $content = preg_replace($patterns, $replacementString, $content);
         }
 

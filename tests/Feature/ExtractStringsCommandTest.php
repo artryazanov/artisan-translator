@@ -2,8 +2,8 @@
 
 namespace Artryazanov\ArtisanTranslator\Tests\Feature;
 
-use Illuminate\Support\Facades\File;
 use Artryazanov\ArtisanTranslator\Tests\TestCase;
+use Illuminate\Support\Facades\File;
 
 class ExtractStringsCommandTest extends TestCase
 {

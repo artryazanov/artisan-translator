@@ -2,7 +2,6 @@
 
 namespace Artryazanov\ArtisanTranslator\Tests\Unit;
 
-use Illuminate\Support\Facades\File;
 use Artryazanov\ArtisanTranslator\Services\StringExtractorService;
 use Artryazanov\ArtisanTranslator\Tests\TestCase;
 
@@ -13,7 +12,7 @@ class StringExtractorServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->extractor = new StringExtractorService();
+        $this->extractor = new StringExtractorService;
     }
 
     public function test_it_extracts_strings_from_double_quotes(): void
@@ -70,9 +69,10 @@ class StringExtractorServiceTest extends TestCase
 
     private function createTempFile(string $content): string
     {
-        $path = __DIR__ . '/../temp/test.blade.php';
+        $path = __DIR__.'/../temp/test.blade.php';
         @mkdir(dirname($path), 0777, true);
         file_put_contents($path, $content);
+
         return $path;
     }
 }

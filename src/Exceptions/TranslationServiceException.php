@@ -2,6 +2,4 @@
 
 namespace Artryazanov\ArtisanTranslator\Exceptions;
 
-class TranslationServiceException extends \Exception
-{
-}
+class TranslationServiceException extends \Exception {}
