@@ -25,13 +25,13 @@ class ExtractStringsCommandTest extends TestCase
         $this->assertTrue(File::exists($langPath));
 
         $translations = require $langPath;
-        $this->assertEquals('Welcome', $translations['pages']['home']['welcome'] ?? null);
-        $this->assertEquals('This is a test.', $translations['pages']['home']['this_is_a_test'] ?? null);
+        $this->assertEquals('Welcome', $translations['welcome'] ?? null);
+        $this->assertEquals('This is a test.', $translations['this_is_a_test'] ?? null);
 
         // Assert blade updated
         $updatedBladeContent = File::get($bladePath);
-        $this->assertStringContainsString("__('blade.pages.home.welcome')", $updatedBladeContent);
-        $this->assertStringContainsString("__('blade.pages.home.this_is_a_test')", $updatedBladeContent);
+        $this->assertStringContainsString("__('blade/pages/home.welcome')", $updatedBladeContent);
+        $this->assertStringContainsString("__('blade/pages/home.this_is_a_test')", $updatedBladeContent);
     }
 
     public function test_dry_run_option_prevents_file_changes(): void

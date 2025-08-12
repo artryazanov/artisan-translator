@@ -24,32 +24,29 @@ class TranslationFileService
      */
     public function saveString(SplFileInfo $bladeFile, string $string, bool $force): ?string
     {
-        $key = $this->generateKey($bladeFile, $string); // without root prefix
-        $langFilePath = $this->getLangFilePath($bladeFile);
+        // Determine blade-relative path (without extension) to build group path with slashes
+        $viewsBase = str_replace('\\', '/', rtrim(resource_path('views'), "\\/")) . '/';
+        $absPath = str_replace('\\', '/', $bladeFile->getPathname());
+        $relativePath = Str::after($absPath, $viewsBase);
+        $pathWithoutExtension = str_replace('.blade.php', '', $relativePath);
 
+        // Build leaf key from string
+        $snake = (string) Str::of($string)->lower()->snake();
+        $snake = (string) preg_replace('/[^a-z0-9_]+/', '', $snake);
+        $snake = trim($snake, '_');
+        $leafKey = (string) Str::of($snake)->limit(50, '');
+
+        $langFilePath = $this->getLangFilePath($bladeFile);
         $translations = $this->loadTranslations($langFilePath);
 
-        $keyParts = explode('.', $key);
-        $leafKey = array_pop($keyParts);
-
-        $currentLevel = &$translations;
-        foreach ($keyParts as $part) {
-            // Ignore the lang root path if ever present in key parts (safety)
-            if ($part === $this->langRootPath) {
-                continue;
-            }
-            if (!isset($currentLevel[$part]) || !is_array($currentLevel[$part])) {
-                $currentLevel[$part] = [];
-            }
-            $currentLevel = &$currentLevel[$part];
-        }
-
-        if (!isset($currentLevel[$leafKey]) || $force) {
-            $currentLevel[$leafKey] = $string;
+        // Write as a flat array inside the file (no redundant directory nesting)
+        if (!isset($translations[$leafKey]) || $force) {
+            $translations[$leafKey] = $string;
             $this->saveTranslations($langFilePath, $translations);
         }
 
-        return $this->langRootPath . '.' . implode('.', $keyParts) . '.' . $leafKey;
+        // Return a key that uses slash-separated group for subfolders as Laravel expects
+        return $this->langRootPath . '/' . $pathWithoutExtension . '.' . $leafKey;
     }
 
     /**

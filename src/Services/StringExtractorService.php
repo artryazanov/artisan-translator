@@ -46,7 +46,10 @@ class StringExtractorService
 
     private function isLikelyTranslationKey(string $value): bool
     {
-        // Key like: words.with.dots_only (no spaces), segments are [a-z0-9_-]
-        return (bool) preg_match('/^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/', $value);
+        // Accept keys like:
+        // - group.with.dots (classic file-based groups)
+        // - group/sub/group.leaf (subfolder groups with slash)
+        // Segments are [A-Za-z0-9_-]
+        return (bool) preg_match('/^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/', $value);
     }
 }

@@ -23,13 +23,13 @@ class TranslationFileServiceTest extends TestCase
         $bladeFile = new SplFileInfo($bladePath);
         $key = $service->saveString($bladeFile, 'Explore Videos', false);
 
-        // The returned key should include root path
-        $this->assertSame('blade.pages.home.explore_videos', $key);
+        // The returned key should include root path with slash-separated group
+        $this->assertSame('blade/pages/home.explore_videos', $key);
 
         $langFilePath = lang_path('en/blade/pages/home.php');
         $this->assertTrue(File::exists($langFilePath));
 
         $translations = require $langFilePath;
-        $this->assertEquals('Explore Videos', $translations['pages']['home']['explore_videos'] ?? null);
+        $this->assertEquals('Explore Videos', $translations['explore_videos'] ?? null);
     }
 }
