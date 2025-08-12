@@ -21,13 +21,13 @@ jobs:
       run: composer validate --strict
 
     - name: Cache Composer packages
-      id: composer-cache-artisan-translator
+      id: composer-cache
       uses: actions/cache@v3
       with:
         path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-php-artisan-translator-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
-          ${{ runner.os }}-php-
+          ${{ runner.os }}-php-artisan-translator-
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
