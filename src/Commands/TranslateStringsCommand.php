@@ -46,6 +46,10 @@ class TranslateStringsCommand extends Command
         $sourceFiles = $filesystem->allFiles($sourcePath);
         $totalStringsTranslated = 0;
 
+        // Configurable minimal interval between AI requests (in seconds)
+        $delaySeconds = (float) config('artisan-translator.ai_request_delay_seconds', 2.0);
+        $previousRequestDuration = null; // seconds
+
         foreach ($sourceFiles as $sourceFile) {
             $sourceData = $filesystem->getRequire($sourceFile->getRealPath());
             if (! is_array($sourceData)) {
@@ -72,6 +76,15 @@ class TranslateStringsCommand extends Command
                         continue; // already translated
                     }
 
+                    // Respect delay between AI requests by accounting for previous request duration
+                    if ($previousRequestDuration !== null && $delaySeconds > 0) {
+                        $sleepFor = $delaySeconds - $previousRequestDuration;
+                        if ($sleepFor > 0) {
+                            // Convert seconds to microseconds for finer granularity
+                            usleep((int) round($sleepFor * 1_000_000));
+                        }
+                    }
+
                     $this->comment("  - Translating key '{$key}'...");
                     $fullKey = $langRootPath.'.'.$key;
                     $context = [
@@ -79,12 +92,16 @@ class TranslateStringsCommand extends Command
                         'file' => $sourceFile->getRelativePathname(),
                     ];
 
+                    $start = microtime(true);
                     try {
                         $translatedText = $translator->translate((string) $text, $sourceLang, $targetLang, $context);
                         $newTranslations[$key] = $translatedText;
                         $totalStringsTranslated++;
                     } catch (\Throwable $e) {
                         $this->error("    Translation error: {$e->getMessage()}");
+                    } finally {
+                        // Measure only the AI request duration for the next-iteration delay
+                        $previousRequestDuration = max(0.0, microtime(true) - $start);
                     }
                 }
 

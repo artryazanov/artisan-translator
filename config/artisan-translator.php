@@ -1,5 +1,7 @@
 <?php
 
+use Artryazanov\ArtisanTranslator\Enums\GeminiModel;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -22,14 +24,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI Request Delay
+    |--------------------------------------------------------------------------
+    | Minimal interval between consecutive AI requests in seconds. The actual
+    | sleep before the next request is calculated as:
+    |   max(0, ai_request_delay_seconds - previous_request_duration)
+    | where previous_request_duration is only the time spent waiting for the
+    | AI to respond (not including any other processing).
+    */
+    'ai_request_delay_seconds' => (float) env('ARTISAN_TRANSLATOR_AI_DELAY', 2.0),
+
+    /*
+    |--------------------------------------------------------------------------
     | Gemini Settings
     |--------------------------------------------------------------------------
     | Credentials and model for google-gemini-php/laravel integration.
-    | Set GEMINI_API_KEY in your .env. Model defaults to 'gemini-2.5-pro'.
+    | Set GEMINI_API_KEY in your .env. Model defaults to GeminiModel::GEMMA_3_27B_IT.
     */
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL', 'gemini-2.5-pro'),
+        'model' => env('GEMINI_MODEL', GeminiModel::GEMMA_3_27B_IT->value),
     ],
 
     /*

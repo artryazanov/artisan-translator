@@ -6,6 +6,7 @@ use Artryazanov\ArtisanTranslator\Commands\CleanupTranslationsCommand;
 use Artryazanov\ArtisanTranslator\Commands\ExtractStringsCommand;
 use Artryazanov\ArtisanTranslator\Commands\TranslateStringsCommand;
 use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
+use Artryazanov\ArtisanTranslator\Enums\GeminiModel;
 use Artryazanov\ArtisanTranslator\Services\GeminiTranslationService;
 use Illuminate\Support\ServiceProvider;
 
@@ -19,7 +20,7 @@ class ArtisanTranslatorServiceProvider extends ServiceProvider
         $this->app->singleton(TranslationService::class, function ($app) {
             return new GeminiTranslationService(
                 $app['config']['artisan-translator.gemini.api_key'] ?? '',
-                $app['config']['artisan-translator.gemini.model'] ?? 'gemini-2.5-pro'
+                $app['config']['artisan-translator.gemini.model'] ?? GeminiModel::GEMMA_3_27B_IT->value
             );
         });
     }

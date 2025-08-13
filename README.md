@@ -21,7 +21,8 @@ Add your `GEMINI_API_KEY` to the host application's `.env` file.
 ## Configuration (config/artisan-translator.php)
 - `source_language` — the source language of Blade literals (default: `en`).
 - `lang_root_path` — the root folder under `resources/lang/{locale}` for generated files (default: `blade`).
-- `gemini.api_key`, `gemini.model` — Gemini settings (default model: `gemini-2.5-pro`).
+- `ai_request_delay_seconds` — minimal interval between consecutive AI requests in seconds (default: `2.0`). The actual sleep before the next request is `max(0, delay - previous_request_duration)`. You can override via ENV `ARTISAN_TRANSLATOR_AI_DELAY`.
+- `gemini.api_key`, `gemini.model` — Gemini settings (default model: `gemma-3-27b-it`). Supported models via enum: `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemma-3-27b-it`. You can override via ENV `GEMINI_MODEL`.
 - `mcamara_localization_support` — if `true` and `mcamara/laravel-localization` is installed, target languages can be auto-detected.
 
 ## Commands
@@ -42,7 +43,9 @@ Arguments/options:
 - `--targets=*` — list of target languages (can be specified multiple times),
 - `--force` — overwrite existing translations.
 
-If `--targets` is not provided and `mcamara_localization_support=true`, and `mcamara/laravel-localization` is installed, targets are taken from `LaravelLocalization::getSupportedLocales()`.
+Notes:
+- The command respects the configured `ai_request_delay_seconds`, waiting `max(0, delay - previous_request_duration)` between AI requests.
+- If `--targets` is not provided and `mcamara_localization_support=true`, and `mcamara/laravel-localization` is installed, targets are taken from `LaravelLocalization::getSupportedLocales()`.
 
 ### translations:cleanup
 Finds translation keys that are defined in language files but not used in your app code, removes them, and deletes empty language files.
