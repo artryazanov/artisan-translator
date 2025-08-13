@@ -6,17 +6,23 @@ Artisan Translator is a Laravel package that helps you:
 - replace literals in Blade with generated keys (e.g., `__('blade.path.key')`),
 - translate those files into other languages via the Gemini API (`google-gemini-php/laravel`).
 
-## Installation (developing inside a monorepo)
+## Installation
 
-1. Put the package into `packages/artryazanov/artisan-translator`.
-2. Ensure Laravel auto-discovery picks up the service provider (defined in the package `composer.json`).
-3. Optionally publish the config:
+Install via Composer:
+
+```bash
+composer require artryazanov/artisan-translator
+```
+
+Laravel will auto-discover the service provider.
+
+Optionally publish the config:
 
 ```bash
 php artisan vendor:publish --provider="Artryazanov\ArtisanTranslator\ArtisanTranslatorServiceProvider" --tag="config"
 ```
 
-Add your `GEMINI_API_KEY` to the host application's `.env` file.
+Add your `GEMINI_API_KEY` to your application's `.env` file.
 
 ## Configuration (config/artisan-translator.php)
 - `source_language` — the source language of Blade literals (default: `en`).
