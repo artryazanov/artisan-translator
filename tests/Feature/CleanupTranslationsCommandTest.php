@@ -28,7 +28,6 @@ class CleanupTranslationsCommandTest extends TestCase
         File::put(resource_path('views/welcome.blade.php'), "{{ __('messages.used') }} {{ __('json_used') }}");
     }
 
-    /** @test */
     public function dry_run_identifies_unused_keys_but_does_not_delete_them(): void
     {
         $this->artisan('translations:cleanup', ['--dry-run' => true])
@@ -42,7 +41,6 @@ class CleanupTranslationsCommandTest extends TestCase
         $this->assertStringContainsString('"json_unused": "JSON Unused"', File::get(lang_path('en.json')));
     }
 
-    /** @test */
     public function command_prompts_for_confirmation_and_aborts_on_no(): void
     {
         $this->artisan('translations:cleanup')
@@ -53,7 +51,6 @@ class CleanupTranslationsCommandTest extends TestCase
         $this->assertStringContainsString("'unused' => 'Unused'", File::get(lang_path('en/messages.php')));
     }
 
-    /** @test */
     public function command_removes_unused_keys_on_confirmation(): void
     {
         $this->artisan('translations:cleanup')
@@ -65,7 +62,6 @@ class CleanupTranslationsCommandTest extends TestCase
         $this->assertStringContainsString("'used' => 'Used'", $content);
     }
 
-    /** @test */
     public function command_deletes_empty_php_language_file_after_cleanup(): void
     {
         // A file with only one unused key -> becomes empty -> should be deleted
@@ -79,7 +75,6 @@ class CleanupTranslationsCommandTest extends TestCase
         $this->assertFileDoesNotExist(lang_path('en/lonely.php'));
     }
 
-    /** @test */
     public function force_option_skips_confirmation_and_deletes_keys(): void
     {
         $this->artisan('translations:cleanup', ['--force' => true])

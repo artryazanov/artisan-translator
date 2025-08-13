@@ -95,6 +95,13 @@ class TranslateStringsCommand extends Command
                     $start = microtime(true);
                     try {
                         $translatedText = $translator->translate((string) $text, $sourceLang, $targetLang, $context);
+
+                        // Strip wrapping double quotes from translated text unless the source was also wrapped
+                        $sourceWrapped = $this->isWrappedWithDoubleQuotes((string) $text);
+                        if (! $sourceWrapped) {
+                            $translatedText = $this->unwrapOuterDoubleQuotes($translatedText);
+                        }
+
                         $newTranslations[$key] = $translatedText;
                         $totalStringsTranslated++;
                     } catch (\Throwable $e) {
@@ -131,6 +138,29 @@ class TranslateStringsCommand extends Command
         }
 
         return [];
+    }
+
+    /**
+     * Check if a string is wrapped with ASCII double quotes (") after trimming whitespace.
+     */
+    private function isWrappedWithDoubleQuotes(string $value): bool
+    {
+        $trimmed = trim($value);
+        return strlen($trimmed) >= 2 && $trimmed[0] === '"' && str_ends_with($trimmed, '"');
+    }
+
+    /**
+     * Remove a single pair of outer ASCII double quotes (") if present, preserving inner content.
+     * Does not strip any surrounding whitespace other than what is inside the captured quotes.
+     */
+    private function unwrapOuterDoubleQuotes(string $value): string
+    {
+        $trimmed = trim($value);
+        if (strlen($trimmed) >= 2 && $trimmed[0] === '"' && str_ends_with($trimmed, '"')) {
+            $trimmed = substr($trimmed, 1, -1);
+        }
+
+        return $trimmed;
     }
 
     private function saveTranslations(string $path, array $new, array $existing): void
