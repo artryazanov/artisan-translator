@@ -2,11 +2,11 @@
 
 namespace Artryazanov\ArtisanTranslator\Services;
 
+use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Symfony\Component\Finder\Finder;
-use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 
 /**
  * Service responsible for discovering defined translation keys, scanning code for used keys,
@@ -17,6 +17,7 @@ use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 class TranslationCleanerService
 {
     use ExportsShortArrays;
+
     public function __construct(private readonly Filesystem $files) {}
 
     /**
@@ -155,7 +156,7 @@ class TranslationCleanerService
                         $report['deleted_files'][] = $real;
                     } else {
                         $export = $this->varExportShort($data);
-                        $this->files->put($real, "<?php\n\nreturn " . $export . ";\n");
+                        $this->files->put($real, "<?php\n\nreturn ".$export.";\n");
                     }
                 }
             }
@@ -296,5 +297,4 @@ class TranslationCleanerService
 
         return $keys;
     }
-
 }

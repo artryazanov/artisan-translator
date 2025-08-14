@@ -11,6 +11,7 @@ trait ExportsShortArrays
     {
         $export = var_export($expression, true);
         $export = preg_replace(['/(^|\b)array\s*\(/', '/\)(?=\s*(,|\)|$))/'], ['[', ']'], $export);
+
         return is_string($export) ? $export : var_export($expression, true);
     }
 }
