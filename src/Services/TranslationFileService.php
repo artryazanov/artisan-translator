@@ -2,9 +2,9 @@
 
 namespace Artryazanov\ArtisanTranslator\Services;
 
+use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 use SplFileInfo;
 
 class TranslationFileService
@@ -118,8 +118,7 @@ class TranslationFileService
         }
 
         $export = $this->varExportShort($translations);
-        $content = "<?php\n\nreturn " . $export . ";\n";
+        $content = "<?php\n\nreturn ".$export.";\n";
         $this->filesystem->put($path, $content);
     }
-
 }

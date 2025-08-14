@@ -2,11 +2,11 @@
 
 namespace Artryazanov\ArtisanTranslator\Commands;
 
+use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
-use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 
 class TranslateStringsCommand extends Command
 {
@@ -182,8 +182,7 @@ class TranslateStringsCommand extends Command
         }
 
         $export = $this->varExportShort($undotted);
-        $content = "<?php\n\nreturn " . $export . ";\n";
+        $content = "<?php\n\nreturn ".$export.";\n";
         $fs->put($path, $content);
     }
-
 }
