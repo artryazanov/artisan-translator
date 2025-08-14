@@ -22,6 +22,7 @@ trait ExportsShortArrays
         $export = preg_replace_callback('/^ +/m', static function (array $m) {
             $spaces = strlen($m[0]);
             $levels = intdiv($spaces, 2);
+
             return str_repeat('    ', $levels);
         }, $export);
 

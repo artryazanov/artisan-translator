@@ -20,6 +20,7 @@ class TranslationFileService
     /**
      * In-memory cache of translations per lang file path to avoid stale reloads within a single process
      * (e.g., OPcache may serve outdated content for repeated require calls).
+     *
      * @var array<string,array>
      */
     private array $translationsCache = [];
