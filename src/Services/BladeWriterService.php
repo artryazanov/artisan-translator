@@ -27,13 +27,14 @@ class BladeWriterService
             $rxDouble = preg_quote(addcslashes($string, '\\"$'), '/');  // " -> \", \ -> \\, $ -> \$
 
             $patterns = [
-                "/__\(\s*'{$rxSingle}'\s*\)/u",
-                "/__\(\s*\"{$rxDouble}\"\s*\)/u",
-                "/@lang\(\s*'{$rxSingle}'\s*\)/u",
-                "/@lang\(\s*\"{$rxDouble}\"\s*\)/u",
+                "/__\(\s*'{$rxSingle}'\s*(,\s*[^)]*)?\)/u",
+                "/__\(\s*\"{$rxDouble}\"\s*(,\s*[^)]*)?\)/u",
+                "/@lang\(\s*'{$rxSingle}'\s*(,\s*[^)]*)?\)/u",
+                "/@lang\(\s*\"{$rxDouble}\"\s*(,\s*[^)]*)?\)/u",
             ];
 
-            $replacementString = "__('".$key."')";
+            // Keep optional parameter tail via backreference $1
+            $replacementString = "__('".$key."'\$1)";
             $content = preg_replace($patterns, $replacementString, $content);
         }
 

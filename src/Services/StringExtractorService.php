@@ -33,12 +33,13 @@ class StringExtractorService
 
         $strings = [];
         foreach ($matches as $text) {
-            $text = stripcslashes($text);
-            $trimmed = trim($text);
+            $original = stripcslashes($text);
+            $trimmed = trim($original);
             if ($trimmed === '' || $this->isLikelyTranslationKey($trimmed)) {
                 continue;
             }
-            $strings[] = $trimmed;
+            // Preserve original whitespace so that BladeWriter can match exact literal in the file
+            $strings[] = $original;
         }
 
         return array_values(array_unique($strings));

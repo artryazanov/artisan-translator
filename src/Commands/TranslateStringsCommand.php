@@ -97,13 +97,18 @@ class TranslateStringsCommand extends Command
 
                     $start = microtime(true);
                     try {
-                        $translatedText = $translator->translate((string) $text, $sourceLang, $targetLang, $context);
+                        // Mask Laravel-style placeholders like :search to ensure AI keeps them intact
+                        [$maskedText, $phMap] = $this->maskPlaceholders((string) $text);
+                        $translatedText = $translator->translate($maskedText, $sourceLang, $targetLang, $context);
 
                         // Strip wrapping double quotes from translated text unless the source was also wrapped
                         $sourceWrapped = $this->isWrappedWithDoubleQuotes((string) $text);
                         if (! $sourceWrapped) {
                             $translatedText = $this->unwrapOuterDoubleQuotes($translatedText);
                         }
+
+                        // Restore placeholders
+                        $translatedText = $this->unmaskPlaceholders($translatedText, $phMap);
 
                         $newTranslations[$key] = $translatedText;
                         $totalStringsTranslated++;
@@ -165,6 +170,37 @@ class TranslateStringsCommand extends Command
         }
 
         return $trimmed;
+    }
+
+    /**
+     * Replace Laravel-style placeholders like :search with non-translatable tokens.
+     * Returns [maskedText, map token=>originalPlaceholder].
+     */
+    private function maskPlaceholders(string $text): array
+    {
+        $i = 0;
+        $map = [];
+        $masked = preg_replace_callback('/:([A-Za-z_][A-Za-z0-9_]*)/', function ($m) use (&$i, &$map) {
+            $i++;
+            $token = '[[[PLH'.$i.']]]';
+            $map[$token] = ':'.$m[1];
+            return $token;
+        }, $text);
+
+        return [$masked ?? $text, $map];
+    }
+
+    /**
+     * Restore masked tokens back to original placeholders.
+     * @param array<string,string> $map
+     */
+    private function unmaskPlaceholders(string $text, array $map): string
+    {
+        if (empty($map)) {
+            return $text;
+        }
+
+        return strtr($text, $map);
     }
 
     private function saveTranslations(string $path, array $new, array $existing): void
