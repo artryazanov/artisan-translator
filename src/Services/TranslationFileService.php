@@ -4,10 +4,13 @@ namespace Artryazanov\ArtisanTranslator\Services;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 use SplFileInfo;
 
 class TranslationFileService
 {
+    use ExportsShortArrays;
+
     private Filesystem $filesystem;
 
     private string $langRootPath;
@@ -114,7 +117,9 @@ class TranslationFileService
             $this->filesystem->makeDirectory($directory, 0755, true);
         }
 
-        $content = "<?php\n\nreturn ".var_export($translations, true).";\n";
+        $export = $this->varExportShort($translations);
+        $content = "<?php\n\nreturn " . $export . ";\n";
         $this->filesystem->put($path, $content);
     }
+
 }

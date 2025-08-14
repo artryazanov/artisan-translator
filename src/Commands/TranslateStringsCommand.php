@@ -6,9 +6,12 @@ use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
+use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
 
 class TranslateStringsCommand extends Command
 {
+    use ExportsShortArrays;
+
     protected $signature = 'translate:ai'
         .' {source? : Source language (defaults to config)}'
         .' {--targets=* : Target languages (e.g., --targets=de --targets=fr)}'
@@ -177,7 +180,9 @@ class TranslateStringsCommand extends Command
             $fs->makeDirectory($directory, 0755, true, true);
         }
 
-        $content = "<?php\n\nreturn ".var_export($undotted, true).";\n";
+        $export = $this->varExportShort($undotted);
+        $content = "<?php\n\nreturn " . $export . ";\n";
         $fs->put($path, $content);
     }
+
 }

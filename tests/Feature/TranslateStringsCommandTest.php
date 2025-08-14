@@ -38,6 +38,12 @@ class TranslateStringsCommandTest extends TestCase
         // Assert target file
         $targetLangPath = lang_path('de/blade/test.php');
         $this->assertTrue(File::exists($targetLangPath));
+
+        // Content should use short array syntax
+        $content = File::get($targetLangPath);
+        $this->assertStringContainsString('return [', $content);
+        $this->assertStringNotContainsString('array (', $content);
+
         $translations = require $targetLangPath;
         $this->assertEquals('Hallo', $translations['hello'] ?? null);
         $this->assertEquals('Welt', $translations['world'] ?? null);

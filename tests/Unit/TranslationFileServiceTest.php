@@ -29,6 +29,11 @@ class TranslationFileServiceTest extends TestCase
         $langFilePath = lang_path('en/blade/pages/home.php');
         $this->assertTrue(File::exists($langFilePath));
 
+        // Assert content uses short array syntax
+        $content = File::get($langFilePath);
+        $this->assertStringContainsString('return [', $content);
+        $this->assertStringNotContainsString('array (', $content);
+
         $translations = require $langFilePath;
         $this->assertEquals('Explore Videos', $translations['explore_videos'] ?? null);
     }
