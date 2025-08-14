@@ -14,7 +14,7 @@ class BladeWriterServiceTest extends TestCase
         $bladePath = resource_path('views/pages/with_params.blade.php');
         File::makeDirectory(dirname($bladePath), 0755, true, true);
 
-        $original = "Search results for \":search\"";
+        $original = 'Search results for ":search"';
         $content = <<<'BLADE'
 <div>
     {{ __('Search results for ":search"', ['search' => $search]) }}

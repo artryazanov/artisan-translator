@@ -184,6 +184,7 @@ class TranslateStringsCommand extends Command
             $i++;
             $token = '[[[PLH'.$i.']]]';
             $map[$token] = ':'.$m[1];
+
             return $token;
         }, $text);
 
@@ -192,7 +193,8 @@ class TranslateStringsCommand extends Command
 
     /**
      * Restore masked tokens back to original placeholders.
-     * @param array<string,string> $map
+     *
+     * @param  array<string,string>  $map
      */
     private function unmaskPlaceholders(string $text, array $map): string
     {
