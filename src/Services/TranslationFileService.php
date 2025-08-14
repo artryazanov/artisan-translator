@@ -17,6 +17,13 @@ class TranslationFileService
 
     private string $sourceLanguage;
 
+    /**
+     * In-memory cache of translations per lang file path to avoid stale reloads within a single process
+     * (e.g., OPcache may serve outdated content for repeated require calls).
+     * @var array<string,array>
+     */
+    private array $translationsCache = [];
+
     public function __construct(Filesystem $filesystem)
     {
         $this->filesystem = $filesystem;
@@ -98,13 +105,22 @@ class TranslationFileService
      */
     private function loadTranslations(string $path): array
     {
-        if ($this->filesystem->exists($path)) {
-            $data = $this->filesystem->getRequire($path);
-
-            return is_array($data) ? $data : [];
+        // Serve from in-memory cache if available to avoid stale disk reads within same process
+        if (array_key_exists($path, $this->translationsCache)) {
+            return $this->translationsCache[$path];
         }
 
-        return [];
+        if ($this->filesystem->exists($path)) {
+            $data = $this->filesystem->getRequire($path);
+            $translations = is_array($data) ? $data : [];
+            // Cache the loaded translations for subsequent operations in the same run
+            $this->translationsCache[$path] = $translations;
+
+            return $translations;
+        }
+
+        // Cache empty for non-existing files to accumulate keys in memory before first write
+        return $this->translationsCache[$path] = [];
     }
 
     /**
@@ -116,6 +132,9 @@ class TranslationFileService
         if (! $this->filesystem->isDirectory($directory)) {
             $this->filesystem->makeDirectory($directory, 0755, true);
         }
+
+        // Update cache first so subsequent saveString calls in the same run see the latest array
+        $this->translationsCache[$path] = $translations;
 
         $export = $this->varExportShort($translations);
         $content = "<?php\n\nreturn ".$export.";\n";
