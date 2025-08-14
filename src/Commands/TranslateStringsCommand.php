@@ -149,6 +149,7 @@ class TranslateStringsCommand extends Command
     private function isWrappedWithDoubleQuotes(string $value): bool
     {
         $trimmed = trim($value);
+
         return strlen($trimmed) >= 2 && $trimmed[0] === '"' && str_ends_with($trimmed, '"');
     }
 
