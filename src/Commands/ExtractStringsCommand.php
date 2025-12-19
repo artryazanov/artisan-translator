@@ -31,12 +31,6 @@ class ExtractStringsCommand extends Command
 
     /**
      * Execute the console command.
-     *
-     * @param BladeScannerService $scanner
-     * @param StringExtractorService $extractor
-     * @param TranslationFileService $fileService
-     * @param BladeWriterService $writer
-     * @return int
      */
     public function handle(
         BladeScannerService $scanner,

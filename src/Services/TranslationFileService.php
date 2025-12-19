@@ -19,9 +19,6 @@ class TranslationFileService
 
     private string $sourceLanguage;
 
-    /**
-     * @param TranslationRepository $repository
-     */
     public function __construct(
         private readonly TranslationRepository $repository
     ) {
@@ -32,9 +29,9 @@ class TranslationFileService
     /**
      * Save a string to the corresponding translation file and return the generated key path (with root prefix).
      *
-     * @param SplFileInfo $bladeFile Source blade file
-     * @param string $string Text to translate/save
-     * @param bool $force Overwrite existing key
+     * @param  SplFileInfo  $bladeFile  Source blade file
+     * @param  string  $string  Text to translate/save
+     * @param  bool  $force  Overwrite existing key
      * @return string|null The generated translation key (e.g. "blade/dir/file.key")
      */
     public function saveString(SplFileInfo $bladeFile, string $string, bool $force): ?string
@@ -67,7 +64,6 @@ class TranslationFileService
     /**
      * Determine lang file path for the given Blade file.
      *
-     * @param SplFileInfo $bladeFile
      * @return string Absolute path to language file
      */
     private function getLangFilePath(SplFileInfo $bladeFile): string

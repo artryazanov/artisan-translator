@@ -51,7 +51,6 @@ it('fails if no targets are provided or detected', function () {
         ->assertFailed();
 });
 
-
 it('strips outer double quotes when source is not quoted', function () {
     $string = 'Model Gemini';
     $translation = '"Модель Gemini"';
@@ -60,7 +59,7 @@ it('strips outer double quotes when source is not quoted', function () {
     $sourceLangPath = lang_path('en/blade/quotes_unquoted.php');
     File::makeDirectory(dirname($sourceLangPath), 0755, true, true);
     // Use var_export for safe PHP code generation
-    $phpContent = "<?php return [\n    'key' => " . var_export($string, true) . ",\n];\n";
+    $phpContent = "<?php return [\n    'key' => ".var_export($string, true).",\n];\n";
     File::put($sourceLangPath, $phpContent);
 
     // Mock
@@ -88,7 +87,7 @@ it('preserves outer double quotes when source is quoted', function () {
 
     $sourceLangPath = lang_path('en/blade/quotes_quoted.php');
     File::makeDirectory(dirname($sourceLangPath), 0755, true, true);
-    $phpContent = "<?php return [\n    'key' => " . var_export($string, true) . ",\n];\n";
+    $phpContent = "<?php return [\n    'key' => ".var_export($string, true).",\n];\n";
     File::put($sourceLangPath, $phpContent);
 
     // Mock
@@ -109,4 +108,3 @@ it('preserves outer double quotes when source is quoted', function () {
     $translations = require $targetLangPath;
     expect($translations['key'] ?? null)->toBe($expectedStored);
 });
-

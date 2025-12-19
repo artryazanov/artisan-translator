@@ -33,7 +33,7 @@ it('preserves laravel placeholders during ai translation', function () {
     // Assert target file
     $targetLangPath = lang_path('ru/blade/params.php');
     expect(File::exists($targetLangPath))->toBeTrue();
-    
+
     $translations = require $targetLangPath;
     expect($translations['search_line'] ?? null)->toBe('Результаты поиска для ":search"');
 });

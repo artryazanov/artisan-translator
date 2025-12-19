@@ -11,9 +11,6 @@ trait ExportsShortArrays
     /**
      * Export arrays using short syntax [] instead of array().
      * Also normalize indentation to PSR-12 (4 spaces).
-     *
-     * @param mixed $expression
-     * @return string
      */
     protected function varExportShort(mixed $expression): string
     {

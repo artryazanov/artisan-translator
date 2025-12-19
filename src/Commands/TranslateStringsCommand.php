@@ -20,11 +20,6 @@ class TranslateStringsCommand extends Command
 
     protected $description = 'Translates strings to other languages using the Gemini API.';
 
-    /**
-     * @param Filesystem $filesystem
-     * @param BatchTranslationService $batchService
-     * @return int
-     */
     public function handle(Filesystem $filesystem, BatchTranslationService $batchService): int
     {
         $this->info('🚀 Starting AI translation...');
@@ -64,7 +59,7 @@ class TranslateStringsCommand extends Command
                 $this->line("➤ Translating to '{$targetLang}' for file: ".$sourceFile->getRelativePathname());
 
                 $targetFilePath = lang_path("{$targetLang}/{$langRootPath}/".$sourceFile->getRelativePathname());
-                
+
                 $count = $batchService->translateFile(
                     $sourceFile->getRealPath(),
                     $sourceLang,
@@ -79,7 +74,7 @@ class TranslateStringsCommand extends Command
                         }
                     }
                 );
-                
+
                 $totalStringsTranslated += $count;
             }
         }

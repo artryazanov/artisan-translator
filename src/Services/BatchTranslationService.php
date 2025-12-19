@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Artryazanov\ArtisanTranslator\Services;
 
 use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
-use Artryazanov\ArtisanTranslator\Exceptions\TranslationServiceException;
 use Illuminate\Support\Arr;
 
 /**
@@ -24,12 +23,7 @@ class BatchTranslationService
     /**
      * Translate a single file from source language to target language.
      *
-     * @param string $sourceFilePath
-     * @param string $sourceLang
-     * @param string $targetLang
-     * @param string $targetFilePath
-     * @param bool $force
-     * @param callable|null $onProgress function(string $key, string $status): void
+     * @param  callable|null  $onProgress  function(string $key, string $status): void
      * @return int Number of strings translated
      */
     public function translateFile(
@@ -45,12 +39,12 @@ class BatchTranslationService
 
         $existingTranslations = [];
         if ($this->repository->isDirectory(dirname($targetFilePath))) {
-             $existingTranslations = Arr::dot($this->repository->load($targetFilePath));
+            $existingTranslations = Arr::dot($this->repository->load($targetFilePath));
         }
 
         $newTranslations = [];
         $count = 0;
-        
+
         // Prepare pending items
         $pending = [];
         $batchSize = 20;
@@ -77,13 +71,13 @@ class BatchTranslationService
         }
 
         if (! empty($newTranslations)) {
-             $all = array_merge($existingTranslations, $newTranslations);
-             $undotted = [];
-             foreach ($all as $k => $v) {
-                 Arr::set($undotted, $k, $v);
-             }
-             
-             $this->repository->save($targetFilePath, $undotted);
+            $all = array_merge($existingTranslations, $newTranslations);
+            $undotted = [];
+            foreach ($all as $k => $v) {
+                Arr::set($undotted, $k, $v);
+            }
+
+            $this->repository->save($targetFilePath, $undotted);
         }
 
         return $count;
@@ -93,12 +87,8 @@ class BatchTranslationService
      * Process a batch of translations.
      * Mask placeholders -> Translate -> Unmask -> Validate -> Update Results.
      *
-     * @param array<string, string> $batch
-     * @param string $sourceLang
-     * @param string $targetLang
-     * @param string $filename
-     * @param callable|null $onProgress
-     * @param array $results Reference to results array
+     * @param  array<string, string>  $batch
+     * @param  array  $results  Reference to results array
      * @return int Number of successfully processed items
      */
     private function processBatch(
@@ -118,16 +108,16 @@ class BatchTranslationService
         $meta = [];
 
         foreach ($batch as $key => $text) {
-             if ($onProgress) {
-                 $onProgress($key, 'translating');
-             }
-             [$masked, $phMap] = $this->processor->maskPlaceholders($text);
-             $maskedBatch[$key] = $masked;
-             $meta[$key] = [
-                 'phMap' => $phMap,
-                 'wrapped' => $this->processor->isWrappedWithDoubleQuotes($text),
-                 'original' => $text,
-             ];
+            if ($onProgress) {
+                $onProgress($key, 'translating');
+            }
+            [$masked, $phMap] = $this->processor->maskPlaceholders($text);
+            $maskedBatch[$key] = $masked;
+            $meta[$key] = [
+                'phMap' => $phMap,
+                'wrapped' => $this->processor->isWrappedWithDoubleQuotes($text),
+                'original' => $text,
+            ];
         }
 
         // Sleep if needed (simple delay between batches)
@@ -141,9 +131,10 @@ class BatchTranslationService
             // Report error for all keys in batch
             foreach ($batch as $key => $val) {
                 if ($onProgress) {
-                    $onProgress($key, 'error: ' . $e->getMessage());
+                    $onProgress($key, 'error: '.$e->getMessage());
                 }
             }
+
             return 0;
         }
 
@@ -152,7 +143,10 @@ class BatchTranslationService
         // Post-process
         foreach ($batch as $key => $originalText) {
             if (! isset($translatedBatch[$key])) {
-                if ($onProgress) $onProgress($key, 'error: missing in response');
+                if ($onProgress) {
+                    $onProgress($key, 'error: missing in response');
+                }
+
                 continue;
             }
 
