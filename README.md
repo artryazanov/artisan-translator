@@ -1,5 +1,7 @@
 # Artisan Translator for Laravel
 
+**Artisan Translator** streamlines the localization workflow in Laravel applications. It automates the extraction of strings from Blade templates, translates them using Google's Gemini AI, and helps keep your language files clean by removing unused keys.
+
 [![Tests](https://github.com/artryazanov/artisan-translator/actions/workflows/run-tests.yml/badge.svg)](https://github.com/artryazanov/artisan-translator/actions/workflows/run-tests.yml)
 [![Pint](https://github.com/artryazanov/artisan-translator/actions/workflows/run-pint.yml/badge.svg)](https://github.com/artryazanov/artisan-translator/actions/workflows/run-pint.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
@@ -7,8 +9,6 @@
 [![PHP Version](https://img.shields.io/packagist/php-v/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
 [![Laravel Version](https://img.shields.io/badge/Laravel-11%2F12-red?style=flat-square&logo=laravel)](https://laravel.com)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
-
-**Artisan Translator** streamlines the localization workflow in Laravel applications. It automates the extraction of strings from Blade templates, translates them using Google's Gemini AI, and helps keep your language files clean by removing unused keys.
 
 ## Key Features
 
