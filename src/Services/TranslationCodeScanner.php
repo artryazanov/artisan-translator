@@ -22,7 +22,7 @@ class TranslationCodeScanner
         $keys = [];
 
         $functions = config('translation-cleaner.translation_functions', ['__', 'trans', 'trans_choice', '@lang', '@choice']);
-        
+
         // Build patterns for helpers and blade directives
         $helperFns = array_filter($functions, fn ($f) => ! str_starts_with($f, '@'));
         $directives = array_filter($functions, fn ($f) => str_starts_with($f, '@'));
@@ -42,7 +42,7 @@ class TranslationCodeScanner
         $filePatterns = config('translation-cleaner.file_extensions', ['*.php', '*.blade.php']);
         $filePatterns = $this->normalizeFilePatterns($filePatterns);
 
-        $finder = new Finder();
+        $finder = new Finder;
         $finder->in($scanPaths)->files()->name($filePatterns);
 
         foreach ($finder as $file) {
@@ -65,7 +65,7 @@ class TranslationCodeScanner
     /**
      * Normalize file patterns to ensure they match correctly.
      *
-     * @param array<string> $patterns
+     * @param  array<string>  $patterns
      * @return array<string>
      */
     private function normalizeFilePatterns(array $patterns): array

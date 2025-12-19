@@ -14,7 +14,7 @@ class StringExtractorService
      * Ignores already externalized keys like 'file.key' (alphanumeric, dashes/underscores with dots),
      * but keeps normal sentences even if they contain punctuation dots.
      *
-     * @param string $filePath Absolute path to the file.
+     * @param  string  $filePath  Absolute path to the file.
      * @return array<string> List of unique strings found.
      */
     public function extract(string $filePath): array
@@ -55,9 +55,6 @@ class StringExtractorService
 
     /**
      * Check if the value looks like a translation key (e.g. "group.key" or "group/sub.key").
-     *
-     * @param string $value
-     * @return bool
      */
     private function isLikelyTranslationKey(string $value): bool
     {

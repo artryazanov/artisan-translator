@@ -18,11 +18,6 @@ class TranslationCleanerService
 {
     use ExportsShortArrays;
 
-    /**
-     * @param Filesystem $files
-     * @param TranslationCodeScanner $scanner
-     * @param TranslationRepository $repository
-     */
     public function __construct(
         private readonly Filesystem $files,
         private readonly TranslationCodeScanner $scanner,
@@ -77,14 +72,14 @@ class TranslationCleanerService
             }
 
             // Any locale JSON file directly under $langRoot
-            $finder = new Finder();
+            $finder = new Finder;
             $finder->in($langRoot)->depth('== 0')->files()->name('*.json');
             foreach ($finder as $jsonFile) {
                 $path = $jsonFile->getRealPath();
                 if (! $path) {
                     continue;
                 }
-                
+
                 $content = $this->repository->loadJson($path);
                 $changed = false;
                 foreach ($jsonKeys as $key) {
@@ -118,7 +113,7 @@ class TranslationCleanerService
                 continue;
             }
 
-            $finder = new Finder();
+            $finder = new Finder;
             $finder->in($langRoot)->files()->name('*.php');
 
             foreach ($finder as $phpFile) {
@@ -159,7 +154,7 @@ class TranslationCleanerService
                         $this->repository->delete($real);
                         $report['deleted_files'][] = $real;
                     } else {
-                         $this->repository->save($real, $data);
+                        $this->repository->save($real, $data);
                     }
                 }
             }
@@ -185,7 +180,7 @@ class TranslationCleanerService
     {
         $keys = [];
 
-        $finder = new Finder();
+        $finder = new Finder;
         $finder->in($langPaths)->files()->name(['*.php', '*.json']);
 
         foreach ($finder as $file) {
@@ -198,12 +193,13 @@ class TranslationCleanerService
             if ($ext === 'json') {
                 $content = $this->repository->loadJson($real);
                 $keys = array_merge($keys, array_keys($content));
+
                 continue;
             }
 
             // PHP array file under {langRoot}/{locale}/{group}.php
             $data = $this->repository->load($real);
-            
+
             // Determine group path after locale
             foreach ($langPaths as $langRoot) {
                 $langRoot = rtrim($langRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;

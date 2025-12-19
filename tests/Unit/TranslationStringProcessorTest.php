@@ -47,16 +47,16 @@ it('unmasks placeholders correctly', function () {
 
 it('validates placeholders matching', function () {
     $source = 'Hello :name';
-    
+
     // Correct
     expect($this->processor->validatePlaceholders($source, 'Hola :name'))->toBeTrue();
-    
+
     // Missing
     expect($this->processor->validatePlaceholders($source, 'Hola'))->toBeFalse();
-    
+
     // Extra
     expect($this->processor->validatePlaceholders($source, 'Hola :name :other'))->toBeFalse();
-    
+
     // Mismatch name
     expect($this->processor->validatePlaceholders($source, 'Hola :nombre'))->toBeFalse();
 });

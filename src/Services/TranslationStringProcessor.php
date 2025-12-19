@@ -12,9 +12,6 @@ class TranslationStringProcessor
 {
     /**
      * Check if a string is wrapped with ASCII double quotes (") after trimming whitespace.
-     *
-     * @param string $value
-     * @return bool
      */
     public function isWrappedWithDoubleQuotes(string $value): bool
     {
@@ -25,9 +22,6 @@ class TranslationStringProcessor
 
     /**
      * Remove a single pair of outer ASCII double quotes (") if present, preserving inner content.
-     *
-     * @param string $value
-     * @return string
      */
     public function unwrapOuterDoubleQuotes(string $value): string
     {
@@ -43,7 +37,6 @@ class TranslationStringProcessor
      * Replace Laravel-style placeholders like :search with non-translatable tokens.
      * Returns [maskedText, map token=>originalPlaceholder].
      *
-     * @param string $text
      * @return array{0: string, 1: array<string,string>}
      */
     public function maskPlaceholders(string $text): array
@@ -64,9 +57,7 @@ class TranslationStringProcessor
     /**
      * Restore masked tokens back to original placeholders.
      *
-     * @param string $text
-     * @param array<string,string> $map
-     * @return string
+     * @param  array<string,string>  $map
      */
     public function unmaskPlaceholders(string $text, array $map): string
     {
@@ -80,14 +71,12 @@ class TranslationStringProcessor
     /**
      * Validate that placeholders in the translated string match the source string.
      *
-     * @param string $source
-     * @param string $translated
      * @return bool True if valid, False if placeholders are missing or mismatched
      */
     public function validatePlaceholders(string $source, string $translated): bool
     {
         $pattern = '/:[\w]+|{[^}]+}/';
-        
+
         preg_match_all($pattern, $source, $sourceMatches);
         preg_match_all($pattern, $translated, $translatedMatches);
 

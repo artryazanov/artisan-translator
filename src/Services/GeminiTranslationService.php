@@ -14,8 +14,8 @@ use Gemini\Laravel\Facades\Gemini as GeminiFacade;
 class GeminiTranslationService implements TranslationService
 {
     /**
-     * @param string $apiKey Gemini API Key
-     * @param string $model Gemini Model Name (e.g. "gemini-1.5-flash")
+     * @param  string  $apiKey  Gemini API Key
+     * @param  string  $model  Gemini Model Name (e.g. "gemini-1.5-flash")
      */
     public function __construct(
         private readonly string $apiKey,
@@ -25,11 +25,12 @@ class GeminiTranslationService implements TranslationService
     /**
      * Translate a single text string.
      *
-     * @param string $text Text to translate
-     * @param string $sourceLang Source language code (ISO 639-1)
-     * @param string $targetLang Target language code (ISO 639-1)
-     * @param array $context Additional context (key, file, etc.)
+     * @param  string  $text  Text to translate
+     * @param  string  $sourceLang  Source language code (ISO 639-1)
+     * @param  string  $targetLang  Target language code (ISO 639-1)
+     * @param  array  $context  Additional context (key, file, etc.)
      * @return string Translated text
+     *
      * @throws TranslationServiceException
      */
     public function translate(string $text, string $sourceLang, string $targetLang, array $context = []): string
@@ -86,19 +87,20 @@ class GeminiTranslationService implements TranslationService
         return $this->retry(function () use ($prompt, $strings) {
             $result = GeminiFacade::generativeModel(model: $this->model)
                 ->generateContent($prompt);
-            
+
             $json = $this->extractJson($result->text());
-            
+
             // Validate keys exist
             $translated = [];
             foreach ($strings as $key => $original) {
                 if (isset($json[$key])) {
-                     $translated[$key] = (string)$json[$key];
+                    $translated[$key] = (string) $json[$key];
                 } else {
-                     // Key missing in JSON response.
-                     // We skip it in the result; the caller will treat it as a failure for this key.
+                    // Key missing in JSON response.
+                    // We skip it in the result; the caller will treat it as a failure for this key.
                 }
             }
+
             return $translated;
         });
     }
@@ -127,7 +129,7 @@ class GeminiTranslationService implements TranslationService
      * Extract and parse JSON from the model response.
      * Handles markdown code blocks if present.
      *
-     * @param string $text Raw response text
+     * @param  string  $text  Raw response text
      * @return array Parsed JSON data
      */
     private function extractJson(string $text): array
@@ -141,8 +143,8 @@ class GeminiTranslationService implements TranslationService
 
         $decoded = json_decode($text, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
-            throw new \RuntimeException('Failed to parse JSON response: ' . $text);
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+            throw new \RuntimeException('Failed to parse JSON response: '.$text);
         }
 
         return $decoded;
@@ -151,10 +153,11 @@ class GeminiTranslationService implements TranslationService
     /**
      * Retry an action with exponential backoff.
      *
-     * @param callable $action Function to retry
-     * @param int $attempts Max attempts
-     * @param int $sleepMs Initial sleep time in milliseconds
+     * @param  callable  $action  Function to retry
+     * @param  int  $attempts  Max attempts
+     * @param  int  $sleepMs  Initial sleep time in milliseconds
      * @return mixed Result of action
+     *
      * @throws TranslationServiceException
      */
     private function retry(callable $action, int $attempts = 3, int $sleepMs = 1000)
@@ -171,6 +174,6 @@ class GeminiTranslationService implements TranslationService
                 }
             }
         }
-        throw new TranslationServiceException('Operation failed after retries: ' . $lastException->getMessage(), 0, $lastException);
+        throw new TranslationServiceException('Operation failed after retries: '.$lastException->getMessage(), 0, $lastException);
     }
 }
