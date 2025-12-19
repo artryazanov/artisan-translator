@@ -1,39 +1,41 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Artryazanov\ArtisanTranslator\Services;
 
 use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use SplFileInfo;
 
+/**
+ * Service responsible for managing translation files, including saving new strings.
+ */
 class TranslationFileService
 {
     use ExportsShortArrays;
-
-    private Filesystem $filesystem;
 
     private string $langRootPath;
 
     private string $sourceLanguage;
 
     /**
-     * In-memory cache of translations per lang file path to avoid stale reloads within a single process
-     * (e.g., OPcache may serve outdated content for repeated require calls).
-     *
-     * @var array<string,array>
+     * @param TranslationRepository $repository
      */
-    private array $translationsCache = [];
-
-    public function __construct(Filesystem $filesystem)
-    {
-        $this->filesystem = $filesystem;
+    public function __construct(
+        private readonly TranslationRepository $repository
+    ) {
         $this->langRootPath = (string) config('artisan-translator.lang_root_path', 'blade');
         $this->sourceLanguage = (string) config('artisan-translator.source_language', 'en');
     }
 
     /**
      * Save a string to the corresponding translation file and return the generated key path (with root prefix).
+     *
+     * @param SplFileInfo $bladeFile Source blade file
+     * @param string $string Text to translate/save
+     * @param bool $force Overwrite existing key
+     * @return string|null The generated translation key (e.g. "blade/dir/file.key")
      */
     public function saveString(SplFileInfo $bladeFile, string $string, bool $force): ?string
     {
@@ -50,12 +52,12 @@ class TranslationFileService
         $leafKey = (string) Str::of($snake)->limit(50, '');
 
         $langFilePath = $this->getLangFilePath($bladeFile);
-        $translations = $this->loadTranslations($langFilePath);
+        $translations = $this->repository->load($langFilePath);
 
         // Write as a flat array inside the file (no redundant directory nesting)
         if (! isset($translations[$leafKey]) || $force) {
             $translations[$leafKey] = $string;
-            $this->saveTranslations($langFilePath, $translations);
+            $this->repository->save($langFilePath, $translations);
         }
 
         // Return a key that uses slash-separated group for subfolders as Laravel expects
@@ -63,31 +65,10 @@ class TranslationFileService
     }
 
     /**
-     * Generate key based on blade path and snake-cased text (without root prefix).
-     */
-    private function generateKey(SplFileInfo $bladeFile, string $string): string
-    {
-        // Normalize paths to forward slashes to be OS-agnostic
-        $viewsBase = str_replace('\\', '/', rtrim(resource_path('views'), '\\/')).'/';
-        $absPath = str_replace('\\', '/', $bladeFile->getPathname());
-        $relativePath = Str::after($absPath, $viewsBase);
-
-        $pathWithoutExtension = str_replace('.blade.php', '', $relativePath);
-        $pathParts = preg_split('/[\\\\\/]+/', $pathWithoutExtension, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-
-        // Build a clean snake-cased key from text: remove any non [a-z0-9_] characters (like dots)
-        $snake = (string) Str::of($string)->lower()->snake();
-        $snake = (string) preg_replace('/[^a-z0-9_]+/', '', $snake);
-        $snake = trim($snake, '_');
-        $stringKey = (string) Str::of($snake)->limit(50, '');
-
-        $keyParts = array_merge($pathParts, [$stringKey]);
-
-        return implode('.', $keyParts);
-    }
-
-    /**
      * Determine lang file path for the given Blade file.
+     *
+     * @param SplFileInfo $bladeFile
+     * @return string Absolute path to language file
      */
     private function getLangFilePath(SplFileInfo $bladeFile): string
     {
@@ -99,46 +80,5 @@ class TranslationFileService
         $pathWithoutExtension = str_replace('.blade.php', '', $relativePath);
 
         return lang_path("{$this->sourceLanguage}/{$this->langRootPath}/{$pathWithoutExtension}.php");
-    }
-
-    /**
-     * Load existing translations or return empty array.
-     */
-    private function loadTranslations(string $path): array
-    {
-        // Serve from in-memory cache if available to avoid stale disk reads within same process
-        if (array_key_exists($path, $this->translationsCache)) {
-            return $this->translationsCache[$path];
-        }
-
-        if ($this->filesystem->exists($path)) {
-            $data = $this->filesystem->getRequire($path);
-            $translations = is_array($data) ? $data : [];
-            // Cache the loaded translations for subsequent operations in the same run
-            $this->translationsCache[$path] = $translations;
-
-            return $translations;
-        }
-
-        // Cache empty for non-existing files to accumulate keys in memory before first write
-        return $this->translationsCache[$path] = [];
-    }
-
-    /**
-     * Save translations array to PHP file.
-     */
-    private function saveTranslations(string $path, array $translations): void
-    {
-        $directory = dirname($path);
-        if (! $this->filesystem->isDirectory($directory)) {
-            $this->filesystem->makeDirectory($directory, 0755, true);
-        }
-
-        // Update cache first so subsequent saveString calls in the same run see the latest array
-        $this->translationsCache[$path] = $translations;
-
-        $export = $this->varExportShort($translations);
-        $content = "<?php\n\nreturn ".$export.";\n";
-        $this->filesystem->put($path, $content);
     }
 }

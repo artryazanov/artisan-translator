@@ -1,17 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Artryazanov\ArtisanTranslator\Commands;
 
-use Artryazanov\ArtisanTranslator\Concerns\ExportsShortArrays;
-use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
+use Artryazanov\ArtisanTranslator\Services\BatchTranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
 
+/**
+ * Command to translate translation files using AI.
+ */
 class TranslateStringsCommand extends Command
 {
-    use ExportsShortArrays;
-
     protected $signature = 'translate:ai'
         .' {source? : Source language (defaults to config)}'
         .' {--targets=* : Target languages (e.g., --targets=de --targets=fr)}'
@@ -19,7 +20,12 @@ class TranslateStringsCommand extends Command
 
     protected $description = 'Translates strings to other languages using the Gemini API.';
 
-    public function handle(Filesystem $filesystem, TranslationService $translator): int
+    /**
+     * @param Filesystem $filesystem
+     * @param BatchTranslationService $batchService
+     * @return int
+     */
+    public function handle(Filesystem $filesystem, BatchTranslationService $batchService): int
     {
         $this->info('🚀 Starting AI translation...');
 
@@ -49,80 +55,32 @@ class TranslateStringsCommand extends Command
         $sourceFiles = $filesystem->allFiles($sourcePath);
         $totalStringsTranslated = 0;
 
-        // Configurable minimal interval between AI requests (in seconds)
-        $delaySeconds = (float) config('artisan-translator.ai_request_delay_seconds', 2.0);
-        $previousRequestDuration = null; // seconds
-
         foreach ($sourceFiles as $sourceFile) {
-            $sourceData = $filesystem->getRequire($sourceFile->getRealPath());
-            if (! is_array($sourceData)) {
-                $sourceData = [];
-            }
-            $translations = Arr::dot($sourceData);
-
             foreach ($targetLangs as $targetLang) {
+                if ($targetLang === $sourceLang) {
+                    continue;
+                }
+
                 $this->line("➤ Translating to '{$targetLang}' for file: ".$sourceFile->getRelativePathname());
 
                 $targetFilePath = lang_path("{$targetLang}/{$langRootPath}/".$sourceFile->getRelativePathname());
-                $existingTranslations = [];
-                if ($filesystem->exists($targetFilePath)) {
-                    $existingData = $filesystem->getRequire($targetFilePath);
-                    $existingTranslations = is_array($existingData) ? Arr::dot($existingData) : [];
-                }
-
-                $newTranslations = [];
-                foreach ($translations as $key => $text) {
-                    if ($text === '' || $text === null) {
-                        continue;
-                    }
-                    if (! $force && isset($existingTranslations[$key])) {
-                        continue; // already translated
-                    }
-
-                    // Respect delay between AI requests by accounting for previous request duration
-                    if ($previousRequestDuration !== null && $delaySeconds > 0) {
-                        $sleepFor = $delaySeconds - $previousRequestDuration;
-                        if ($sleepFor > 0) {
-                            // Convert seconds to microseconds for finer granularity
-                            usleep((int) round($sleepFor * 1_000_000));
+                
+                $count = $batchService->translateFile(
+                    $sourceFile->getRealPath(),
+                    $sourceLang,
+                    $targetLang,
+                    $targetFilePath,
+                    $force,
+                    function (string $key, string $status) {
+                        if ($status === 'translating') {
+                            $this->comment("  - Translating key '{$key}'...");
+                        } elseif (str_starts_with($status, 'error')) {
+                            $this->error("    Translation error for '{$key}': ".substr($status, 7));
                         }
                     }
-
-                    $this->comment("  - Translating key '{$key}'...");
-                    $fullKey = $langRootPath.'.'.$key;
-                    $context = [
-                        'key' => $fullKey,
-                        'file' => $sourceFile->getRelativePathname(),
-                    ];
-
-                    $start = microtime(true);
-                    try {
-                        // Mask Laravel-style placeholders like :search to ensure AI keeps them intact
-                        [$maskedText, $phMap] = $this->maskPlaceholders((string) $text);
-                        $translatedText = $translator->translate($maskedText, $sourceLang, $targetLang, $context);
-
-                        // Strip wrapping double quotes from translated text unless the source was also wrapped
-                        $sourceWrapped = $this->isWrappedWithDoubleQuotes((string) $text);
-                        if (! $sourceWrapped) {
-                            $translatedText = $this->unwrapOuterDoubleQuotes($translatedText);
-                        }
-
-                        // Restore placeholders
-                        $translatedText = $this->unmaskPlaceholders($translatedText, $phMap);
-
-                        $newTranslations[$key] = $translatedText;
-                        $totalStringsTranslated++;
-                    } catch (\Throwable $e) {
-                        $this->error("    Translation error: {$e->getMessage()}");
-                    } finally {
-                        // Measure only the AI request duration for the next-iteration delay
-                        $previousRequestDuration = max(0.0, microtime(true) - $start);
-                    }
-                }
-
-                if (! empty($newTranslations)) {
-                    $this->saveTranslations($targetFilePath, $newTranslations, $existingTranslations);
-                }
+                );
+                
+                $totalStringsTranslated += $count;
             }
         }
 
@@ -131,6 +89,11 @@ class TranslateStringsCommand extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * Determine target languages from options or config.
+     *
+     * @return array<string>
+     */
     private function getTargetLanguages(): array
     {
         $targets = $this->option('targets');
@@ -146,81 +109,5 @@ class TranslateStringsCommand extends Command
         }
 
         return [];
-    }
-
-    /**
-     * Check if a string is wrapped with ASCII double quotes (") after trimming whitespace.
-     */
-    private function isWrappedWithDoubleQuotes(string $value): bool
-    {
-        $trimmed = trim($value);
-
-        return strlen($trimmed) >= 2 && $trimmed[0] === '"' && str_ends_with($trimmed, '"');
-    }
-
-    /**
-     * Remove a single pair of outer ASCII double quotes (") if present, preserving inner content.
-     * Does not strip any surrounding whitespace other than what is inside the captured quotes.
-     */
-    private function unwrapOuterDoubleQuotes(string $value): string
-    {
-        $trimmed = trim($value);
-        if (strlen($trimmed) >= 2 && $trimmed[0] === '"' && str_ends_with($trimmed, '"')) {
-            $trimmed = substr($trimmed, 1, -1);
-        }
-
-        return $trimmed;
-    }
-
-    /**
-     * Replace Laravel-style placeholders like :search with non-translatable tokens.
-     * Returns [maskedText, map token=>originalPlaceholder].
-     */
-    private function maskPlaceholders(string $text): array
-    {
-        $i = 0;
-        $map = [];
-        $masked = preg_replace_callback('/:([A-Za-z_][A-Za-z0-9_]*)/', function ($m) use (&$i, &$map) {
-            $i++;
-            $token = '[[[PLH'.$i.']]]';
-            $map[$token] = ':'.$m[1];
-
-            return $token;
-        }, $text);
-
-        return [$masked ?? $text, $map];
-    }
-
-    /**
-     * Restore masked tokens back to original placeholders.
-     *
-     * @param  array<string,string>  $map
-     */
-    private function unmaskPlaceholders(string $text, array $map): string
-    {
-        if (empty($map)) {
-            return $text;
-        }
-
-        return strtr($text, $map);
-    }
-
-    private function saveTranslations(string $path, array $new, array $existing): void
-    {
-        $all = array_merge($existing, $new);
-        $undotted = [];
-        foreach ($all as $key => $value) {
-            Arr::set($undotted, $key, $value);
-        }
-
-        $directory = dirname($path);
-        $fs = app(Filesystem::class);
-        if (! $fs->isDirectory($directory)) {
-            $fs->makeDirectory($directory, 0755, true, true);
-        }
-
-        $export = $this->varExportShort($undotted);
-        $content = "<?php\n\nreturn ".$export.";\n";
-        $fs->put($path, $content);
     }
 }

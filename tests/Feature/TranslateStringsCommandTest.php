@@ -1,110 +1,112 @@
 <?php
 
-namespace Artryazanov\ArtisanTranslator\Tests\Feature;
+declare(strict_types=1);
 
 use Artryazanov\ArtisanTranslator\Contracts\TranslationService;
-use Artryazanov\ArtisanTranslator\Tests\TestCase;
 use Illuminate\Support\Facades\File;
-use Mockery;
 
-class TranslateStringsCommandTest extends TestCase
-{
-    public function test_translate_command_works_correctly(): void
-    {
-        // Prepare source translation file
-        $sourceLangPath = lang_path('en/blade/test.php');
-        File::makeDirectory(dirname($sourceLangPath), 0755, true, true);
-        $sourceContent = "<?php return [\n    'hello' => 'Hello',\n    'world' => 'World',\n];\n";
-        File::put($sourceLangPath, $sourceContent);
+it('works correctly', function () {
+    // Prepare source translation file
+    $sourceLangPath = lang_path('en/blade/test.php');
+    File::makeDirectory(dirname($sourceLangPath), 0755, true, true);
+    $sourceContent = "<?php return [\n    'hello' => 'Hello',\n    'world' => 'World',\n];\n";
+    File::put($sourceLangPath, $sourceContent);
 
-        // Mock TranslationService
-        $this->mock(TranslationService::class, function ($mock) {
-            $mock->shouldReceive('translate')
-                ->with('Hello', 'en', 'de', Mockery::on(function ($ctx) {
-                    return is_array($ctx) && isset($ctx['key']);
-                }))
-                ->andReturn('Hallo');
-            $mock->shouldReceive('translate')
-                ->with('World', 'en', 'de', Mockery::on(function ($ctx) {
-                    return is_array($ctx) && isset($ctx['key']);
-                }))
-                ->andReturn('Welt');
-        });
+    // Mock TranslationService
+    $this->mock(TranslationService::class, function ($mock) {
+        $mock->shouldReceive('translateBatch')
+            ->with(Mockery::on(function ($batch) {
+                return isset($batch['hello']) && $batch['hello'] === 'Hello'
+                    && isset($batch['world']) && $batch['world'] === 'World';
+            }), 'en', 'de', Mockery::on(function ($ctx) {
+                return is_array($ctx) && isset($ctx['file']);
+            }))
+            ->andReturn(['hello' => 'Hallo', 'world' => 'Welt']);
+    });
 
-        // Run command
-        $this->artisan('translate:ai', ['source' => 'en', '--targets' => ['de']])
-            ->assertSuccessful();
+    // Run command
+    $this->artisan('translate:ai', ['source' => 'en', '--targets' => ['de']])
+        ->assertSuccessful();
 
-        // Assert target file
-        $targetLangPath = lang_path('de/blade/test.php');
-        $this->assertTrue(File::exists($targetLangPath));
+    // Assert target file
+    $targetLangPath = lang_path('de/blade/test.php');
+    expect(File::exists($targetLangPath))->toBeTrue();
 
-        // Content should use short array syntax
-        $content = File::get($targetLangPath);
-        $this->assertStringContainsString('return [', $content);
-        $this->assertStringNotContainsString('array (', $content);
+    // Content should use short array syntax
+    $content = File::get($targetLangPath);
+    expect($content)
+        ->toContain('return [')
+        ->not->toContain('array (');
 
-        $translations = require $targetLangPath;
-        $this->assertEquals('Hallo', $translations['hello'] ?? null);
-        $this->assertEquals('Welt', $translations['world'] ?? null);
-    }
+    $translations = require $targetLangPath;
+    expect($translations['hello'] ?? null)->toBe('Hallo')
+        ->and($translations['world'] ?? null)->toBe('Welt');
+});
 
-    public function test_command_fails_if_no_targets_are_provided_or_detected(): void
-    {
-        config(['artisan-translator.mcamara_localization_support' => false]);
+it('fails if no targets are provided or detected', function () {
+    config(['artisan-translator.mcamara_localization_support' => false]);
 
-        $this->artisan('translate:ai', ['source' => 'en'])
-            ->expectsOutput('Target languages are not provided and cannot be determined automatically.')
-            ->assertFailed();
-    }
+    $this->artisan('translate:ai', ['source' => 'en'])
+        ->expectsOutput('Target languages are not provided and cannot be determined automatically.')
+        ->assertFailed();
+});
 
-    public function test_strips_outer_double_quotes_when_source_not_quoted(): void
-    {
-        // Source has unquoted text
-        $sourceLangPath = lang_path('en/blade/quotes.php');
-        File::makeDirectory(dirname($sourceLangPath), 0755, true, true);
-        File::put($sourceLangPath, "<?php return [\n    'title' => 'Model Gemini',\n];\n");
 
-        // Mock TranslationService to return text wrapped in quotes
-        $this->mock(TranslationService::class, function ($mock) {
-            $mock->shouldReceive('translate')
-                ->with('Model Gemini', 'en', 'ru', Mockery::on(fn ($ctx) => is_array($ctx) && isset($ctx['key'])))
-                ->andReturn('"Модель Gemini"');
-        });
+it('strips outer double quotes when source is not quoted', function () {
+    $string = 'Model Gemini';
+    $translation = '"Модель Gemini"';
+    $expectedStored = 'Модель Gemini';
 
-        // Run command
-        $this->artisan('translate:ai', ['source' => 'en', '--targets' => ['ru']])
-            ->assertSuccessful();
+    $sourceLangPath = lang_path('en/blade/quotes_unquoted.php');
+    File::makeDirectory(dirname($sourceLangPath), 0755, true, true);
+    // Use var_export for safe PHP code generation
+    $phpContent = "<?php return [\n    'key' => " . var_export($string, true) . ",\n];\n";
+    File::put($sourceLangPath, $phpContent);
 
-        // The saved translation should be without the outer quotes
-        $targetLangPath = lang_path('ru/blade/quotes.php');
-        $this->assertTrue(File::exists($targetLangPath));
-        $translations = require $targetLangPath;
-        $this->assertSame('Модель Gemini', $translations['title'] ?? null);
-    }
+    // Mock
+    $this->mock(TranslationService::class, function ($mock) use ($translation, $string) {
+        $mock->shouldReceive('translateBatch')
+            ->with(Mockery::on(function ($batch) use ($string) {
+                return isset($batch['key']) && $batch['key'] === $string;
+            }), 'en', 'ru', Mockery::any())
+            ->andReturn(['key' => $translation]);
+    });
 
-    public function test_preserves_outer_double_quotes_when_source_is_quoted(): void
-    {
-        // Source has quoted text
-        $sourceLangPath = lang_path('en/blade/quotes2.php');
-        File::makeDirectory(dirname($sourceLangPath), 0755, true, true);
-        File::put($sourceLangPath, "<?php return [\n    'label' => '\"Output Tokens\"',\n];\n");
+    $this->artisan('translate:ai', ['source' => 'en', '--targets' => ['ru']])
+        ->assertSuccessful();
 
-        // Mock TranslationService to return text wrapped in quotes as well
-        $this->mock(TranslationService::class, function ($mock) {
-            $mock->shouldReceive('translate')
-                ->with('"Output Tokens"', 'en', 'ru', Mockery::on(fn ($ctx) => is_array($ctx) && isset($ctx['key'])))
-                ->andReturn('"Токены вывода"');
-        });
+    $targetLangPath = lang_path('ru/blade/quotes_unquoted.php');
+    expect(File::exists($targetLangPath))->toBeTrue();
+    $translations = require $targetLangPath;
+    expect($translations['key'] ?? null)->toBe($expectedStored);
+});
 
-        // Run command
-        $this->artisan('translate:ai', ['source' => 'en', '--targets' => ['ru']])
-            ->assertSuccessful();
+it('preserves outer double quotes when source is quoted', function () {
+    $string = '"Output Tokens"';
+    $translation = '"Токены вывода"';
+    $expectedStored = '"Токены вывода"';
 
-        // The saved translation should keep the outer quotes
-        $targetLangPath = lang_path('ru/blade/quotes2.php');
-        $this->assertTrue(File::exists($targetLangPath));
-        $translations = require $targetLangPath;
-        $this->assertSame('"Токены вывода"', $translations['label'] ?? null);
-    }
-}
+    $sourceLangPath = lang_path('en/blade/quotes_quoted.php');
+    File::makeDirectory(dirname($sourceLangPath), 0755, true, true);
+    $phpContent = "<?php return [\n    'key' => " . var_export($string, true) . ",\n];\n";
+    File::put($sourceLangPath, $phpContent);
+
+    // Mock
+    $this->mock(TranslationService::class, function ($mock) use ($translation, $string) {
+        $mock->shouldReceive('translateBatch')
+            ->with(Mockery::on(function ($batch) use ($string) {
+                // $batch['key'] should match the source string exactly (including quotes)
+                return isset($batch['key']) && $batch['key'] === $string;
+            }), 'en', 'ru', Mockery::any())
+            ->andReturn(['key' => $translation]);
+    });
+
+    $this->artisan('translate:ai', ['source' => 'en', '--targets' => ['ru']])
+        ->assertSuccessful();
+
+    $targetLangPath = lang_path('ru/blade/quotes_quoted.php');
+    expect(File::exists($targetLangPath))->toBeTrue();
+    $translations = require $targetLangPath;
+    expect($translations['key'] ?? null)->toBe($expectedStored);
+});
+

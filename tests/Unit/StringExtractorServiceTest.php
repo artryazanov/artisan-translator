@@ -1,78 +1,67 @@
 <?php
 
-namespace Artryazanov\ArtisanTranslator\Tests\Unit;
+declare(strict_types=1);
 
 use Artryazanov\ArtisanTranslator\Services\StringExtractorService;
-use Artryazanov\ArtisanTranslator\Tests\TestCase;
 
-class StringExtractorServiceTest extends TestCase
+// Helper to create temp file
+function createTempBladeFile(string $content): string
 {
-    private StringExtractorService $extractor;
+    $path = __DIR__.'/../temp/test.blade.php';
+    @mkdir(dirname($path), 0777, true);
+    file_put_contents($path, $content);
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->extractor = new StringExtractorService;
-    }
-
-    public function test_it_extracts_strings_from_double_quotes(): void
-    {
-        $content = '<h1>{{ __("Hello World") }}</h1>';
-        $path = $this->createTempFile($content);
-
-        $result = $this->extractor->extract($path);
-
-        $this->assertEquals(['Hello World'], $result);
-    }
-
-    public function test_it_extracts_strings_from_single_quotes(): void
-    {
-        $content = "<div>{{ __('Explore Videos') }}</div>";
-        $path = $this->createTempFile($content);
-
-        $result = $this->extractor->extract($path);
-
-        $this->assertEquals(['Explore Videos'], $result);
-    }
-
-    public function test_it_ignores_strings_with_dots_as_keys(): void
-    {
-        $content = "<p>{{ __('user.profile.title') }}</p>";
-        $path = $this->createTempFile($content);
-
-        $result = $this->extractor->extract($path);
-
-        $this->assertEmpty($result);
-    }
-
-    public function test_it_extracts_from_lang_directive(): void
-    {
-        $content = "<span>@lang('Submit Button')</span>";
-        $path = $this->createTempFile($content);
-
-        $result = $this->extractor->extract($path);
-
-        $this->assertEquals(['Submit Button'], $result);
-    }
-
-    public function test_it_handles_multiple_strings_and_returns_unique(): void
-    {
-        $content = "\n            <title>{{ __('Page Title') }}</title>\n            <h1>{{ __('Page Title') }}</h1>\n            <p>{{ __('Some other text.') }}</p>\n        ";
-        $path = $this->createTempFile($content);
-
-        $result = $this->extractor->extract($path);
-
-        $this->assertCount(2, $result);
-        $this->assertContains('Page Title', $result);
-        $this->assertContains('Some other text.', $result);
-    }
-
-    private function createTempFile(string $content): string
-    {
-        $path = __DIR__.'/../temp/test.blade.php';
-        @mkdir(dirname($path), 0777, true);
-        file_put_contents($path, $content);
-
-        return $path;
-    }
+    return $path;
 }
+
+beforeEach(function () {
+    $this->extractor = new StringExtractorService;
+});
+
+it('extracts strings from double quotes', function () {
+    $content = '<h1>{{ __("Hello World") }}</h1>';
+    $path = createTempBladeFile($content);
+
+    $result = $this->extractor->extract($path);
+
+    expect($result)->toBe(['Hello World']);
+});
+
+it('extracts strings from single quotes', function () {
+    $content = "<div>{{ __('Explore Videos') }}</div>";
+    $path = createTempBladeFile($content);
+
+    $result = $this->extractor->extract($path);
+
+    expect($result)->toBe(['Explore Videos']);
+});
+
+it('ignores strings with dots as keys', function () {
+    $content = "<p>{{ __('user.profile.title') }}</p>";
+    $path = createTempBladeFile($content);
+
+    $result = $this->extractor->extract($path);
+
+    expect($result)->toBeEmpty();
+});
+
+it('extracts from lang directive', function () {
+    $content = "<span>@lang('Submit Button')</span>";
+    $path = createTempBladeFile($content);
+
+    $result = $this->extractor->extract($path);
+
+    expect($result)->toBe(['Submit Button']);
+});
+
+it('handles multiple strings and returns unique', function () {
+    $content = "\n            <title>{{ __('Page Title') }}</title>\n            <h1>{{ __('Page Title') }}</h1>\n            <p>{{ __('Some other text.') }}</p>\n        ";
+    $path = createTempBladeFile($content);
+
+    $result = $this->extractor->extract($path);
+
+    expect($result)
+        ->toHaveCount(2)
+        ->toContain('Page Title')
+        ->toContain('Some other text.');
+});

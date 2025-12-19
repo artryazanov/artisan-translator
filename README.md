@@ -1,10 +1,4 @@
-# Artisan Translator for Laravel 11/12
-
-Artisan Translator is a Laravel package that helps you:
-- extract translation strings from Blade templates like `__('...')` and `@lang('...')` (ignoring already externalized keys such as `file.key`),
-- store them under `resources/lang/{locale}/{root}/...` (defaults: locale `en`, root `blade`),
-- replace literals in Blade with generated keys (e.g., `__('blade.path.key')`),
-- translate those files into other languages via the Gemini API (`google-gemini-php/laravel`).
+# Artisan Translator for Laravel
 
 [![Tests](https://github.com/artryazanov/artisan-translator/actions/workflows/run-tests.yml/badge.svg)](https://github.com/artryazanov/artisan-translator/actions/workflows/run-tests.yml)
 [![Pint](https://github.com/artryazanov/artisan-translator/actions/workflows/run-pint.yml/badge.svg)](https://github.com/artryazanov/artisan-translator/actions/workflows/run-pint.yml)
@@ -12,79 +6,128 @@ Artisan Translator is a Laravel package that helps you:
 [![Total Downloads](https://img.shields.io/packagist/dt/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
 [![PHP Version](https://img.shields.io/packagist/php-v/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
 [![Laravel Version](https://img.shields.io/badge/Laravel-11%2F12-red?style=flat-square&logo=laravel)](https://laravel.com)
-[![License](https://img.shields.io/badge/license-Unlicense-blue.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
+
+**Artisan Translator** streamlines the localization workflow in Laravel applications. It automates the extraction of strings from Blade templates, translates them using Google's Gemini AI, and helps keep your language files clean by removing unused keys.
+
+## Key Features
+
+- **🔍 Automatic Extraction**: Scans Blade templates (`.blade.php`) for static strings, replaces them with translation keys (e.g., `__('messages.welcome')`), and saves the source strings to language files.
+- **🤖 AI Translation**: Uses **Google Gemini** to translate your strings into multiple languages.
+- **🚀 Batch Processing**: Translates strings in batches to optimize API usage and reduce costs/time.
+- **🧹 Smart Cleanup**: Detects and removes translation keys that are no longer used in your codebase.
+- **🛡️ Safe & Robust**: Preserves HTML tags and Laravel placeholders (`:name`, `{count}`) during translation. Includes retry mechanisms for API stability.
+
+## Requirements
+
+- **PHP**: 8.2 or higher
+- **Laravel**: 11.0+ or 12.0+
 
 ## Installation
 
-Install via Composer:
+Install the package via Composer:
 
 ```bash
 composer require artryazanov/artisan-translator
 ```
 
-Laravel will auto-discover the service provider.
+The package will automatically register its service provider.
 
-Optionally publish the config:
+### Setup
+
+1.  **Get a Gemini API Key**: Obtain an API key from [Google AI Studio](https://aistudio.google.com/).
+2.  **Configure Environment**: Add the key to your `.env` file:
+
+    ```env
+    GEMINI_API_KEY=your-api-key-here
+    GEMINI_MODEL=gemma-3-27b-it
+    ```
+
+3.  **(Optional) Publish Configuration**: Customise default settings by publishing the config file:
+
+    ```bash
+    php artisan vendor:publish --provider="Artryazanov\ArtisanTranslator\ArtisanTranslatorServiceProvider" --tag="config"
+    ```
+
+## Usage
+
+### 1. Extract Strings
+
+Scan your `resources/views` directory to find static strings, replace them with translation keys in the Blade files, and save the original strings to your source language files (default: `en`).
 
 ```bash
-php artisan vendor:publish --provider="Artryazanov\ArtisanTranslator\ArtisanTranslatorServiceProvider" --tag="config"
+php artisan translate:extract
 ```
 
-Add your `GEMINI_API_KEY` to your application's `.env` file.
+**Options:**
+- `--path=dir/name`: Limit scanning to a specific subdirectory within `resources/views`.
+- `--dry-run`: Preview changes without modifying any files.
+- `--force`: Overwrite existing keys in translation files if they overlap.
 
-## Configuration (config/artisan-translator.php)
-- `source_language` — the source language of Blade literals (default: `en`).
-- `lang_root_path` — the root folder under `resources/lang/{locale}` for generated files (default: `blade`).
-- `ai_request_delay_seconds` — minimal interval between consecutive AI requests in seconds (default: `2.0`). The actual sleep before the next request is `max(0, delay - previous_request_duration)`. You can override via ENV `ARTISAN_TRANSLATOR_AI_DELAY`.
-- `gemini.api_key`, `gemini.model` — Gemini settings (default model: `gemma-3-27b-it`). Supported models via enum: `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemma-3-27b-it`. You can override via ENV `GEMINI_MODEL`.
-- `mcamara_localization_support` — if `true` and `mcamara/laravel-localization` is installed, target languages can be auto-detected.
+### 2. Translate with AI
 
-## Commands
+Translate your extracted strings from the source language to one or more target languages using Gemini.
 
-### translate:extract
-Scans `resources/views` (or a subdirectory) and extracts strings.
+```bash
+php artisan translate:ai --targets=fr --targets=de
+```
 
-Options:
-- `--path=` limit scanning to a subdirectory of `resources/views`;
-- `--dry-run` show what would change without writing files;
-- `--force` overwrite existing keys in lang files.
+**Arguments & Options:**
+- `source` (optional): Specify source language (defaults to `source_language` in config, usually `en`).
+- `--targets`: **Required**. The target language code(s) (e.g., `fr`, `es`, `de`). Can be repeated.
+- `--force`: Overwrite existing translations in the target files.
 
-### translate:ai
-Translates strings found under `resources/lang/{source}/{root}` to other languages.
+> **Note**: If you have `mcamara/laravel-localization` installed, the package can automatically detect supported locales if you omit `--targets`.
 
-Arguments/options:
-- `source` — source language (defaults to config value),
-- `--targets=*` — list of target languages (can be specified multiple times),
-- `--force` — overwrite existing translations.
+### 3. Cleanup Unused Translations
 
-Notes:
-- The command respects the configured `ai_request_delay_seconds`, waiting `max(0, delay - previous_request_duration)` between AI requests.
-- If `--targets` is not provided and `mcamara_localization_support=true`, and `mcamara/laravel-localization` is installed, targets are taken from `LaravelLocalization::getSupportedLocales()`.
+Keep your language files tidy by removing keys that are no longer referenced in your codebase.
 
-### translations:cleanup
-Finds translation keys that are defined in language files but not used in your app code, removes them, and deletes empty language files.
+```bash
+php artisan translations:cleanup --dry-run
+```
 
-Options:
-- `--dry-run` show unused keys without deleting anything;
-- `--force` skip the confirmation prompt.
+**Options:**
+- `--dry-run`: List unused keys without deleting them (Recommended first step).
+- `--force`: Skip the confirmation prompt and delete immediately.
 
-Configuration:
-- Publish the config if needed:
-  ```bash
-  php artisan vendor:publish --provider="Artryazanov\ArtisanTranslator\ArtisanTranslatorServiceProvider" --tag="config"
-  ```
-- Configure scan paths, file extensions, and translation functions in `config/translation-cleaner.php`.
+## Configuration
 
-Safety note:
-- This command is destructive. Always run with `--dry-run` first and ensure your project is under version control.
+### Main Config (`config/artisan-translator.php`)
+
+| Option | Env Variable | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `source_language` | `ARTISAN_TRANSLATOR_SOURCE_LANG` | `en` | The source language of your application. |
+| `lang_root_path` | `ARTISAN_TRANSLATOR_LANG_ROOT` | `blade` | Subdirectory under `resources/lang/{locale}` where files are stored. |
+| `ai_request_delay_seconds` | `ARTISAN_TRANSLATOR_AI_DELAY` | `2.0` | Minimum delay between AI API requests to avoid rate limits. |
+| `gemini.api_key` | `GEMINI_API_KEY` | - | Your Google Gemini API Key. |
+| `gemini.model` | `GEMINI_MODEL` | `gemma-3-27b-it` | The AI model to use. |
+
+### Cleaner Config (`config/translation-cleaner.php`)
+
+- **`scan_paths`**: Directories to scan for translation usage (defaults to `app_path()` and `resource_path('views')`).
+- **`file_extensions`**: File types to scan (defaults to `*.php`, `*.blade.php`).
+- **`translation_functions`**: Functions to look for (e.g., `__`, `trans`, `@lang`).
+
+## Supported AI Models
+
+You can use any string supported by the Gemini API, or one of the built-in Enum values:
+
+- `gemini-3.0-pro`
+- `gemini-3.0-flash`
+- `gemini-2.5-pro`
+- `gemini-2.5-flash`
+- `gemini-2.5-flash-lite`
+- `gemma-3-27b-it` (Default)
 
 ## Testing
 
-This package ships with unit and feature tests (Pest + Orchestra Testbench):
+Run the test suite to ensure everything is working correctly:
 
 ```bash
 composer test
 ```
 
 ## License
-Unlicense. See LICENSE.md.
+
+MIT. See [LICENSE](LICENSE).

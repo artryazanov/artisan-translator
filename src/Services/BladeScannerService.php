@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Artryazanov\ArtisanTranslator\Services;
 
 use Illuminate\Support\Collection;
 use Symfony\Component\Finder\Finder;
 
+/**
+ * Service responsible for finding Blade templates in the project.
+ */
 class BladeScannerService
 {
     /**

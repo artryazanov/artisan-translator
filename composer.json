@@ -10,7 +10,13 @@
     "ai"
   ],
   "type": "laravel-package",
-  "license": "Unlicense",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Artem Ryazanov",
+      "email": "artem@artryazanov.com"
+    }
+  ],
   "require": {
     "php": "^8.2",
     "illuminate/contracts": "^11.0|^12.0",

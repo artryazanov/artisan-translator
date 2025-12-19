@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Artryazanov\ArtisanTranslator\Services;
 
 use Illuminate\Filesystem\Filesystem;
 
+/**
+ * Service responsible for modifying Blade files to replace static strings with translation keys.
+ */
 class BladeWriterService
 {
-    private Filesystem $filesystem;
-
-    public function __construct(Filesystem $filesystem)
-    {
-        $this->filesystem = $filesystem;
-    }
+    public function __construct(
+        private readonly Filesystem $filesystem
+    ) {}
 
     /**
      * Update a Blade file replacing literal strings with translation keys.

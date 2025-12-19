@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Artryazanov\ArtisanTranslator\Commands;
 
 use Artryazanov\ArtisanTranslator\Services\BladeScannerService;
@@ -27,6 +29,15 @@ class ExtractStringsCommand extends Command
      */
     protected $description = 'Extracts translatable strings from Blade files and replaces them with keys.';
 
+    /**
+     * Execute the console command.
+     *
+     * @param BladeScannerService $scanner
+     * @param StringExtractorService $extractor
+     * @param TranslationFileService $fileService
+     * @param BladeWriterService $writer
+     * @return int
+     */
     public function handle(
         BladeScannerService $scanner,
         StringExtractorService $extractor,

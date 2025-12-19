@@ -10,8 +10,14 @@ use Artryazanov\ArtisanTranslator\Enums\GeminiModel;
 use Artryazanov\ArtisanTranslator\Services\GeminiTranslationService;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Service Provider to bootstrap the package.
+ */
 class ArtisanTranslatorServiceProvider extends ServiceProvider
 {
+    /**
+     * Register services.
+     */
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/artisan-translator.php', 'artisan-translator');
@@ -23,8 +29,20 @@ class ArtisanTranslatorServiceProvider extends ServiceProvider
                 $app['config']['artisan-translator.gemini.model'] ?? GeminiModel::GEMMA_3_27B_IT->value
             );
         });
+
+        $this->app->bind(Services\BatchTranslationService::class, function ($app) {
+            return new Services\BatchTranslationService(
+                $app->make(Services\TranslationRepository::class),
+                $app->make(TranslationService::class),
+                $app->make(Services\TranslationStringProcessor::class),
+                (float) ($app['config']['artisan-translator.ai_request_delay_seconds'] ?? 2.0)
+            );
+        });
     }
 
+    /**
+     * Bootstrap services.
+     */
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
