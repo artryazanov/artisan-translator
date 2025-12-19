@@ -6,6 +6,14 @@ Artisan Translator is a Laravel package that helps you:
 - replace literals in Blade with generated keys (e.g., `__('blade.path.key')`),
 - translate those files into other languages via the Gemini API (`google-gemini-php/laravel`).
 
+[![Tests](https://github.com/artryazanov/artisan-translator/actions/workflows/run-tests.yml/badge.svg)](https://github.com/artryazanov/artisan-translator/actions/workflows/run-tests.yml)
+[![Pint](https://github.com/artryazanov/artisan-translator/actions/workflows/run-pint.yml/badge.svg)](https://github.com/artryazanov/artisan-translator/actions/workflows/run-pint.yml)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
+[![Total Downloads](https://img.shields.io/packagist/dt/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
+[![PHP Version](https://img.shields.io/packagist/php-v/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
+[![Laravel Version](https://img.shields.io/badge/Laravel-11%2F12-red?style=flat-square&logo=laravel)](https://laravel.com)
+[![License](https://img.shields.io/badge/license-Unlicense-blue.svg?style=flat-square)](LICENSE)
+
 ## Installation
 
 Install via Composer:
