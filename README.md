@@ -28,7 +28,7 @@
 Install the package via Composer:
 
 ```bash
-composer require artryazanov/artisan-translator
+composer require --dev artryazanov/artisan-translator
 ```
 
 The package will automatically register its service provider.
