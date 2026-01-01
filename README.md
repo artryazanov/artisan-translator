@@ -12,7 +12,7 @@
 
 ## Key Features
 
-- **🔍 Automatic Extraction**: Scans Blade templates (`.blade.php`) for static strings, replaces them with translation keys (e.g., `__('messages.welcome')`), and saves the source strings to language files.
+- **🔍 Automatic Extraction**: Scans Blade templates (`.blade.php`) for **raw text** wrapped in common helpers (e.g. `__('Hello')`), replaces them with translation keys, and saves the source strings to language files.
 - **🤖 AI Translation**: Uses **Google Gemini** to translate your strings into multiple languages.
 - **🚀 Batch Processing**: Translates strings in batches to optimize API usage and reduce costs/time.
 - **🧹 Smart Cleanup**: Detects and removes translation keys that are no longer used in your codebase.
@@ -63,6 +63,18 @@ php artisan translate:extract
 - `--path=dir/name`: Limit scanning to a specific subdirectory within `resources/views`.
 - `--dry-run`: Preview changes without modifying any files.
 - `--force`: Overwrite existing keys in translation files if they overlap.
+
+#### 📝 What strings are extracted?
+
+The command scans for strings wrapped in `__('...')` or `@lang('...')`. It intelligently distinguishes between "plain text" that needs extraction and existing translation keys.
+
+| String Type | Example | Action | Reason |
+| :--- | :--- | :--- | :--- |
+| **Plain Text** | `__('Hello World')` | ✅ **Extract** | Contains spaces or punctuation. |
+| **Plain Text** | `@lang('Click here')` | ✅ **Extract** | Contains spaces. |
+| **Existing Key** | `__('messages.welcome')` | ❌ **Ignore** | Looks like a key (dots, no spaces). |
+| **Existing Key** | `@lang('auth.failed')` | ❌ **Ignore** | Looks like a key. |
+| **Existing Key** | `__('forms/user.email')` | ❌ **Ignore** | Looks like a key (slashes allowed). |
 
 ### 2. Translate with AI
 
