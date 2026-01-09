@@ -6,7 +6,7 @@
 [![Pint](https://github.com/artryazanov/artisan-translator/actions/workflows/run-pint.yml/badge.svg)](https://github.com/artryazanov/artisan-translator/actions/workflows/run-pint.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
 [![Total Downloads](https://img.shields.io/packagist/dt/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
-[![PHP Version](https://img.shields.io/packagist/php-v/artryazanov/artisan-translator.svg?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
+[![PHP Version](https://poser.pugx.org/artryazanov/artisan-translator/require/php?style=flat-square)](https://packagist.org/packages/artryazanov/artisan-translator)
 [![Laravel Version](https://img.shields.io/badge/Laravel-11%2F12-red?style=flat-square&logo=laravel)](https://laravel.com)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
