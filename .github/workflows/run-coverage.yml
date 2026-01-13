@@ -36,7 +36,7 @@ jobs:
           vendor/bin/pest --coverage-clover coverage.xml
 
       - name: Generate Coverage Badge
-        uses: timkrase/phpunit-coverage-badge@v1
+        uses: timkrase/phpunit-coverage-badge@v1.2.1
         with:
           report: coverage.xml
           coverage_badge_path: .github/statuses/coverage.svg
