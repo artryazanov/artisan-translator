@@ -7,6 +7,7 @@ namespace Artryazanov\ArtisanTranslator\Commands;
 use Artryazanov\ArtisanTranslator\Services\BatchTranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 /**
  * Command to translate translation files using AI.
@@ -97,8 +98,8 @@ class TranslateStringsCommand extends Command
         }
 
         if (config('artisan-translator.mcamara_localization_support')
-            && class_exists(\Mcamara\LaravelLocalization\Facades\LaravelLocalization::class)) {
-            $supportedLocales = \Mcamara\LaravelLocalization\Facades\LaravelLocalization::getSupportedLocales();
+            && class_exists(LaravelLocalization::class)) {
+            $supportedLocales = LaravelLocalization::getSupportedLocales();
 
             return array_keys($supportedLocales);
         }
